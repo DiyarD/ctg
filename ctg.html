@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive CTG Interpretation Trainer (NICE Guidelines)</title>
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --main-text: #102a43;
+            --light-text: #486581;
+            --accent-color: #3b82f6;
+            --accent-dark: #2563eb;
+            --white-color: #ffffff;
+            --border-color: #cbd5e1;
+            --danger-color: #dc2626;
+            --warning-color: #f59e0b;
+            --success-color: #16a34a;
+            --disabled-color: #94a3b8;
+            --ctg-grid-pink: #fdf5f5;
+            --ctg-trace-color: #000000;
+            /* Annotation Colors */
+            --anno-accel: #22c55e;
+            --anno-decel: #ef4444;
+            --anno-baseline: #f97316;
+            --anno-peak: #8b5cf6;
+            --anno-link: #64748b;
+            --anno-proof: #0ea5e9; 
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--main-text);
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1800px;
+            background: var(--white-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background-color: var(--accent-color);
+            color: var(--white-color);
+            padding: 16px 24px;
+            text-align: center;
+        }
+        header h1 { font-size: 1.5em; font-weight: 700; margin: 0; }
+        header p { font-size: 0.9em; opacity: 0.9; margin-top: 4px; }
+
+        #main-content { 
+            display: flex; 
+            flex-direction: column;
+            flex-wrap: nowrap; 
+        }
+        
+        #ctg-container { 
+            width: 100%;
+            padding: 20px; 
+            border-bottom: 1px solid var(--border-color);
+            background: #f8fafc;
+        }
+        #interpretation-container { 
+            width: 100%; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        .panel { background-color: var(--white-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .panel-title { font-size: 1.2em; font-weight: 700; color: var(--accent-dark); margin-bottom: 12px; border-bottom: 2px solid var(--accent-color); padding-bottom: 8px; }
+        
+        .controls-panel {
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             flex-wrap: wrap;
+             gap: 15px;
+        }
+
+        .tool-button-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .tool-button { 
+            padding: 8px 12px; 
+            font-size: 0.9em; 
+            font-family: 'Roboto', sans-serif; 
+            font-weight: 500; 
+            border: 1px solid var(--border-color); 
+            background: var(--white-color); 
+            cursor: pointer; 
+            border-radius: 5px; 
+            transition: all 0.2s; 
+        }
+        .tool-button:hover:not(:disabled) { border-color: var(--accent-color); background-color: #eff6ff;}
+        .tool-button.selected { background-color: var(--accent-color); color: #fff; border-color: var(--accent-dark); }
+        .tool-button:disabled { background-color: #e2e8f0; cursor: not-allowed; color: var(--disabled-color); border-color: var(--border-color);}
+
+        #ctg-canvas-container {
+            position: relative;
+            width: 100%;
+            border: 1px solid var(--border-color);
+            background-color: var(--ctg-grid-pink);
+            overflow-x: scroll;
+            overflow-y: hidden;
+            /* MODIFICATION: Removed margin-top to close gap with new form position */
+            /* margin-top: 15px; */
+            /* MODIFICATION: Switched from position:absolute to display:grid for robust canvas layering. */
+            display: grid;
+        }
+        #ctg-canvas, #annotation-canvas {
+            /* MODIFICATION: Removed absolute positioning properties. */
+            /* display: block; */
+            /* position: absolute; */
+            /* top: 0; */
+            /* left: 0; */
+            /* MODIFICATION: Added grid properties to stack canvases in the same cell. */
+            grid-area: 1 / 1;
+        }
+        #annotation-canvas { z-index: 10; cursor: pointer; }
+        #annotation-canvas.drawing { cursor: crosshair; }
+
+        /* Form styling */
+        .form-group { 
+            /* MODIFICATION: Changed to support horizontal layout */
+            margin-bottom: 0; 
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 180px;
+        }
+        .form-group label { display: block; font-weight: 500; margin-bottom: 6px; color: var(--light-text); font-size: 0.9em;}
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--white-color);
+            font-size: 1em;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+        }
+        /* MODIFICATION: Hide labels visually but keep for screen readers */
+        .form-group label.sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+
+        /* MODIFICATION START: Removed old horizontal styles as they are no longer needed */
+        /* .interpretation-controls { ... } */
+        /* MODIFICATION END */
+
+        /* Tutor Feedback Styling */
+        .feedback-list {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 10px;
+        }
+        .feedback-list li {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        .feedback-list li::before {
+            margin-right: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .feedback-list li.fb-correct {
+            background-color: #f0fdf4; border-color: var(--success-color); color: #14532d;
+        }
+        .feedback-list li.fb-correct::before { content: '✔'; color: var(--success-color); }
+        .feedback-list li.fb-incorrect {
+            background-color: #fef2f2; border-color: var(--danger-color); color: #991b1b;
+        }
+        .feedback-list li.fb-incorrect::before { content: '✖'; color: var(--danger-color); }
+
+        #risk-display ul { list-style-type: none; padding: 0; }
+        #risk-display ul li { background: #fffbeb; padding: 8px; border-radius: 4px; margin-bottom: 5px; border-left: 3px solid var(--warning-color); }
+
+        .nav-button { padding: 12px 24px; width: 100%; border: none; border-radius: 6px; background-color: var(--success-color); color: var(--white-color); font-size: 1.1em; font-weight: 700; cursor: pointer; transition: background-color 0.2s; }
+        .nav-button:hover { background-color: #15803d; }
+        
+        /* Results Modal */
+        #results-modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(16, 42, 67, 0.6); backdrop-filter: blur(4px);
+            align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background-color: var(--white-color); margin: auto; padding: 24px; border: 1px solid var(--border-color);
+            width: 90%; max-width: 700px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            padding-bottom: 12px; border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .modal-header h2 { margin: 0; color: var(--accent-dark); }
+        .close-button { color: var(--light-text); font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-button:hover { color: var(--main-text); }
+        .results-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .results-table th, .results-table td { border: 1px solid var(--border-color); padding: 12px; text-align: left; }
+        .results-table th { background-color: #f1f5f9; }
+        .results-table tr td:first-child { font-weight: 500; }
+        .results-table .fb-correct { background-color: #f0fdf4; }
+        .results-table .fb-incorrect { background-color: #fef2f2; }
+        .score { font-size: 1.5em; font-weight: bold; text-align: center; margin-top: 20px; }
+        .score.perfect { color: var(--success-color); }
+        .score.good { color: var(--warning-color); }
+        .score.bad { color: var(--danger-color); }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <header>
+            <h1>Interactive CTG Interpretation Trainer</h1>
+            <p>Based on NICE Clinical Guideline [CG190]</p>
+        </header>
+
+        <div id="main-content">
+            
+            <div id="interpretation-container">
+                <form id="interpretation-form">
+                    <div class="panel controls-panel" style="align-items: flex-start;">
+                         <div style="flex: 1 1 250px; font-size: 0.9em; align-self: center;">
+                            <strong>Risk Factors:</strong>
+                            <div id="risk-display"></div>
+                        </div>
+                    </div>
+                    <div class="panel controls-panel" style="align-items: flex-start;">
+                         <div class="form-group">
+                            <label for="contractions" class="sr-only">Contractions per 10 minutes:</label>
+                            <select id="contractions" name="contractions">
+                                <option value="" disabled selected>Contractions...</option>
+                                <option value="≤5">≤5 (Normal)</option>
+                                <option value=">5">>5 (Tachysystole)</option>
+                            </select>
+                            <ul class="feedback-list" id="contractions-feedback"></ul>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="baseline" class="sr-only">BRa: Baseline Rate (bpm)</label>
+                            <select id="baseline" name="baseline">
+                                <option value="" disabled selected>Baseline Rate...</option>
+                                <option value="reassuring">110-160 (Reassuring)</option>
+                                <option value="non-reassuring">100-109 or 161-180 (Non-reassuring)</option>
+                                <option value="abnormal"><100 or >180 (Abnormal)</option>
+                            </select>
+                            <ul class="feedback-list" id="baseline-feedback"></ul>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="variability" class="sr-only">V: Variability (bpm)</label>
+                            <select id="variability" name="variability">
+                                <option value="" disabled selected>Variability...</option>
+                                <option value="reassuring">5-25 (Reassuring)</option>
+                                <option value="non-reassuring"><5 for 30-50min or >25 for 15-25min</option>
+                                <option value="abnormal"><5 for >50min or >25 for >25min</option>
+                                <option value="sinusoidal">Sinusoidal</option>
+                            </select>
+                            <ul class="feedback-list" id="variability-feedback"></ul>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="accelerations" class="sr-only">A: Accelerations</label>
+                            <select id="accelerations" name="accelerations">
+                                <option value="" disabled selected>Accelerations...</option>
+                                <option value="present">Present (Reassuring)</option>
+                                <option value="absent">Absent (Uncertain Significance)</option>
+                            </select>
+                             <ul class="feedback-list" id="accelerations-feedback"></ul>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="decelerations" class="sr-only">D: Decelerations</label>
+                            <select id="decelerations" name="decelerations">
+                                <option value="" disabled selected>Decelerations...</option>
+                                <option value="none">None</option>
+                                <option value="early">Early</option>
+                                <option value="variable_typical">Variable (Typical)</option>
+                                <option value="variable_atypical">Variable (Atypical/Concerning)</option>
+                                <option value="late">Late</option>
+                                <option value="prolonged">A single prolonged deceleration</option>
+                            </select>
+                            <ul class="feedback-list" id="decelerations-feedback"></ul>
+                        </div>
+
+                         <div class="form-group">
+                            <label for="overall" class="sr-only">Overall Classification:</label>
+                            <select id="overall" name="overall">
+                                <option value="" disabled selected>Overall...</option>
+                                <option value="reassuring">Reassuring</option>
+                                <option value="suspicious">Suspicious (Non-reassuring)</option>
+                                <option value="pathological">Pathological (Abnormal)</option>
+                            </select>
+                             <ul class="feedback-list" id="overall-feedback"></ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div id="ctg-container">
+                <div class="panel controls-panel">
+                    <div class="tool-button-group">
+                        <label for="mode" style="font-weight: 500; color: var(--light-text);">Mode:</label>
+                        <select id="mode" style="padding: 8px 12px; width: auto;">
+                            <option value="tutor">Guided Tutor</option>
+                            <option value="assessment" selected>Self-Assessment</option>
+                        </select>
+                    </div>
+                     <div class="tool-button-group">
+                        <button id="zoom-out-btn" class="tool-button" title="Zoom Out">-</button>
+                        <button id="zoom-reset-btn" class="tool-button" title="Reset Zoom">1x</button>
+                        <button id="zoom-in-btn" class="tool-button" title="Zoom In">+</button>
+                    </div>
+                    <div class="tool-button-group">
+                        <button id="tool-hline-btn" class="tool-button" title="Draw Horizontal Line">H-Line</button>
+                        <button id="tool-vline-btn" class="tool-button" title="Draw Vertical Line">V-Line</button>
+                        <button id="tool-range-btn" class="tool-button" title="Measure Range">Range</button>
+                        <button id="tool-dot-btn" class="tool-button" title="Add Dot">Dot</button>
+                        <button id="tool-clear-btn" class="tool-button" title="Clear Annotations">Clear</button>
+                    </div>
+                    <button type="button" id="view-annotations-btn" class="tool-button">View Annotations</button>
+                    <button type="button" id="submit-assessment-btn" class="tool-button" style="background-color: var(--success-color); color: white; border-color: var(--success-color);">Submit</button>
+                    <button id="new-case-btn" class="tool-button" style="background-color: var(--accent-color); color: white;">New Case</button>
+                </div>
+                
+                <!-- MODIFICATION START: The entire interpretation container has been moved here, above the canvas. -->
+                <!-- MODIFICATION END -->
+
+                <div id="ctg-canvas-container">
+                    <canvas id="ctg-canvas"></canvas>
+                    <canvas id="annotation-canvas"></canvas>
+                </div>
+            </div>
+
+            <!-- MODIFICATION: This container is now empty as its contents were moved above the canvas -->
+            <!-- <div id="interpretation-container"> ... </div> -->
+        </div>
+    </div>
+    
+    <div id="results-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Assessment Results</h2>
+                <span class="close-button">×</span>
+            </div>
+            <div id="modal-body">
+                <div id="score-display" class="score"></div>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter (DR C BRAVADO)</th>
+                            <th>Your Answer</th>
+                            <th>Correct Answer</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-tbody">
+                    </tbody>
+                </table>
+                 <p style="text-align:center; font-weight:bold; margin-top:20px; color: var(--light-text);">Review the automatically annotated trace on the main screen. You can click on the annotation boxes for more details.</p>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+    class CTGApp {
+        constructor() {
+            this.canvasContainer = document.getElementById('ctg-canvas-container');
+            this.canvas = document.getElementById('ctg-canvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.annotationCanvas = document.getElementById('annotation-canvas');
+            this.actx = this.annotationCanvas.getContext('2d');
+
+            this.modeSelect = document.getElementById('mode');
+            this.newCaseBtn = document.getElementById('new-case-btn');
+            this.submitBtn = document.getElementById('submit-assessment-btn');
+            this.viewAnnotationsBtn = document.getElementById('view-annotations-btn');
+            this.form = document.getElementById('interpretation-form');
+            this.riskDisplay = document.getElementById('risk-display');
+            this.modal = document.getElementById('results-modal');
+            this.closeBtn = document.querySelector('.close-button');
+            this.zoomInBtn = document.getElementById('zoom-in-btn');
+            this.zoomOutBtn = document.getElementById('zoom-out-btn');
+            this.zoomResetBtn = document.getElementById('zoom-reset-btn');
+            
+            this.toolHLineBtn = document.getElementById('tool-hline-btn');
+            this.toolVLineBtn = document.getElementById('tool-vline-btn');
+            this.toolRangeBtn = document.getElementById('tool-range-btn');
+            this.toolDotBtn = document.getElementById('tool-dot-btn');
+            this.toolClearBtn = document.getElementById('tool-clear-btn');
+            this.toolButtons = [this.toolHLineBtn, this.toolVLineBtn, this.toolRangeBtn, this.toolDotBtn];
+
+            this.currentMode = 'tutor';
+            this.currentCase = null;
+            this.correctAnswers = {};
+            this.traceColor = getComputedStyle(document.documentElement).getPropertyValue('--ctg-trace-color').trim();
+            this.currentZoomLevel = 1;
+            this.activeTool = null;
+            this.isDrawing = false;
+            this.startPos = { x: 0, y: 0 };
+            this.userAnnotations = [];
+            this.systemAnnotations = [];
+            this.traceData = null;
+            this.assessmentSubmitted = false;
+            this.areSystemAnnotationsVisible = false;
+            this.activeProofAnnotation = null;
+
+            this.CONFIG = {
+                MINS_TO_DISPLAY: 30,
+                FHR_MIN: 50, FHR_MAX: 210,
+                TOCO_MIN: 0, TOCO_MAX: 100,
+                PIXELS_PER_CM: 37.8,
+                POINTS_PER_MIN: 120, // 2 points per second
+            };
+            this.CANVAS_HEIGHT = this.CONFIG.PIXELS_PER_CM * 9;
+            this.ZOOM_MULTIPLIERS = { 0: 1, 1: 3, 2: 6 };
+        }
+
+        init() {
+            this.setupEventListeners();
+            this.setMode(this.modeSelect.value);
+            this.generateNewCase();
+            setTimeout(() => {
+                this.redrawCurrentCase(true);
+            }, 100); // Delay to ensure canvas is ready
+        }
+
+        setupEventListeners() {
+            this.newCaseBtn.addEventListener('click', () => this.generateNewCase());
+            this.modeSelect.addEventListener('change', (e) => this.setMode(e.target.value));
+            this.submitBtn.addEventListener('click', () => this.handleSubmit());
+            this.viewAnnotationsBtn.addEventListener('click', () => this.toggleSystemAnnotations());
+            this.closeBtn.addEventListener('click', () => this.closeResultsModal());
+            window.addEventListener('click', (e) => {
+                if (e.target == this.modal) this.closeResultsModal();
+            });
+            window.addEventListener('resize', () => this.redrawCurrentCase(false));
+
+            this.zoomInBtn.addEventListener('click', () => this.setZoom(this.currentZoomLevel + 1));
+            this.zoomOutBtn.addEventListener('click', () => this.setZoom(this.currentZoomLevel - 1));
+            this.zoomResetBtn.addEventListener('click', () => this.setZoom(1));
+            
+            this.toolHLineBtn.addEventListener('click', () => this.setActiveTool('hline'));
+            this.toolVLineBtn.addEventListener('click', () => this.setActiveTool('vline'));
+            this.toolRangeBtn.addEventListener('click', () => this.setActiveTool('range'));
+            this.toolDotBtn.addEventListener('click', () => this.setActiveTool('dot'));
+            this.toolClearBtn.addEventListener('click', () => this.clearUserAnnotations());
+
+            this.annotationCanvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+            this.annotationCanvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+            this.annotationCanvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+            this.annotationCanvas.addEventListener('mouseleave', () => { this.isDrawing = false; });
+            this.annotationCanvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+
+            this.form.querySelectorAll('select').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    if (this.currentMode === 'tutor') this.checkField(e.target);
+                });
+            });
+        }
+        
+        setActiveTool(tool) {
+            this.activeTool = (this.activeTool === tool) ? null : tool;
+            this.annotationCanvas.style.cursor = this.activeTool ? 'crosshair' : 'pointer';
+            this.toolButtons.forEach(btn => {
+                const btnTool = btn.id.split('-')[1];
+                btn.classList.toggle('selected', this.activeTool === btnTool);
+            });
+        }
+        
+        handleMouseDown(e) {
+            // Clear any active proof when starting a new action
+            if (this.activeProofAnnotation) {
+                this.activeProofAnnotation = null;
+                this.drawAnnotations(this.systemAnnotations, this.actx);
+            }
+            if (!this.activeTool) return;
+            
+            this.isDrawing = true;
+            this.startPos = this.getCanvasCoordinates(e);
+
+            if (this.activeTool === 'dot' || this.activeTool === 'hline' || this.activeTool === 'vline') {
+                const anno = {
+                    type: this.activeTool,
+                    time: this.xToMins(this.startPos.x),
+                    y: this.startPos.y,
+                    color: 'blue'
+                };
+                this.userAnnotations.push(anno);
+                this.drawAnnotations(this.userAnnotations, this.actx);
+                this.isDrawing = false;
+            }
+        }
+
+        handleMouseMove(e) {
+            if (!this.isDrawing || !this.activeTool) return;
+            const currentPos = this.getCanvasCoordinates(e);
+            this.drawAnnotations(this.userAnnotations, this.actx);
+            if (this.activeTool === 'range') {
+                 this.drawSingleAnnotation({
+                    type: this.activeTool,
+                    startTime: this.xToMins(this.startPos.x),
+                    endTime: this.xToMins(currentPos.x),
+                    startY: this.startPos.y,
+                    endY: currentPos.y,
+                    color: 'rgba(0, 0, 255, 0.7)'
+                 }, this.actx);
+            }
+        }
+        
+        handleMouseUp(e) {
+            if (!this.isDrawing || !this.activeTool) return;
+            this.isDrawing = false;
+            const endPos = this.getCanvasCoordinates(e);
+            
+            if (this.activeTool === 'range') {
+                this.userAnnotations.push({
+                    type: this.activeTool,
+                    startTime: this.xToMins(this.startPos.x),
+                    endTime: this.xToMins(endPos.x),
+                    startY: this.startPos.y,
+                    endY: endPos.y,
+                    color: 'blue'
+                });
+                this.drawAnnotations(this.userAnnotations, this.actx);
+            }
+        }
+        
+        handleCanvasClick(e) {
+            if (this.activeTool) return;
+            const pos = this.getCanvasCoordinates(e);
+
+            let clickedAnnotation = null;
+            if (this.assessmentSubmitted || this.areSystemAnnotationsVisible) {
+                for (let i = this.systemAnnotations.length - 1; i >= 0; i--) {
+                    const anno = this.systemAnnotations[i];
+                    if (anno.type === 'box' && anno.details) {
+                        const startX = this.minsToX(anno.startTime);
+                        const endX = this.minsToX(anno.endTime);
+                        if (pos.x >= startX && pos.x <= endX && pos.y >= anno.y1 && pos.y <= anno.y2) {
+                            clickedAnnotation = anno;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (clickedAnnotation && this.activeProofAnnotation === clickedAnnotation) {
+                this.activeProofAnnotation = null;
+            } else {
+                this.activeProofAnnotation = clickedAnnotation;
+            }
+
+            const annotationsToDraw = (this.assessmentSubmitted || this.areSystemAnnotationsVisible) ? this.systemAnnotations : this.userAnnotations;
+            this.drawAnnotations(annotationsToDraw, this.actx);
+        }
+
+        xToMins(x) {
+            const totalCanvasWidth = this.annotationCanvas.width / (window.devicePixelRatio || 1);
+            return (x / totalCanvasWidth) * this.CONFIG.MINS_TO_DISPLAY;
+        }
+
+        minsToX(mins) {
+            const totalCanvasWidth = this.annotationCanvas.width / (window.devicePixelRatio || 1);
+            return (mins / this.CONFIG.MINS_TO_DISPLAY) * totalCanvasWidth;
+        }
+
+        getCanvasCoordinates(e) {
+            const rect = this.annotationCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            return { x, y };
+        }
+
+        clearUserAnnotations() {
+            this.userAnnotations = [];
+            this.activeProofAnnotation = null;
+            this.drawAnnotations([], this.actx);
+        }
+
+        clearAnnotations(context) {
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+        }
+        
+        drawAnnotations(annotations, context) {
+            this.clearAnnotations(context);
+            annotations.forEach(anno => this.drawSingleAnnotation(anno, context));
+            if (this.activeProofAnnotation) {
+                this.drawProofForAnnotation(this.activeProofAnnotation, context);
+            }
+        }
+        
+        drawSingleAnnotation(anno, context) {
+            context.lineWidth = anno.isSystem ? 1.5 : 2;
+            context.font = 'bold 12px Arial';
+            
+            switch (anno.type) {
+                case 'hline':
+                    context.strokeStyle = anno.color;
+                    context.beginPath();
+                    context.moveTo(0, anno.y);
+                    context.lineTo(context.canvas.width / (window.devicePixelRatio || 1), anno.y);
+                    context.stroke();
+                    if(anno.label) {
+                        context.fillStyle = anno.color;
+                        context.textAlign = 'left';
+                        context.fillText(anno.label, 10, anno.y - 5);
+                    }
+                    break;
+                case 'vline':
+                    const x_vline = this.minsToX(anno.time);
+                    context.strokeStyle = anno.color;
+                    context.beginPath();
+                    context.moveTo(x_vline, 0);
+                    // MODIFICATION: Used context.canvas.height and DPR to ensure line draws to the bottom edge correctly.
+                    context.lineTo(x_vline, context.canvas.height / (window.devicePixelRatio || 1));
+                    context.stroke();
+                    break;
+                case 'range':
+                    const startX_range = this.minsToX(anno.startTime);
+                    const endX_range = this.minsToX(anno.endTime);
+                    const dx = endX_range - startX_range;
+                    const dy = anno.endY - anno.startY;
+                    context.strokeStyle = anno.color; context.fillStyle = anno.color;
+                    context.textAlign = 'center'; context.textBaseline = 'bottom';
+
+                    this._drawArrowedLine(context, startX_range, anno.startY, endX_range, anno.endY);
+
+                    let labelText = '';
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        const minutes = Math.abs(anno.endTime - anno.startTime);
+                        labelText = `${minutes.toFixed(1)} min`;
+                        context.fillText(labelText, startX_range + dx / 2, Math.min(anno.startY, anno.endY) - 5);
+                    } else {
+                        const fhrHeight = this.CANVAS_HEIGHT * (2 / 3);
+                        let value;
+                        if (anno.startY < fhrHeight) {
+                            const bpmPerPixel = (this.CONFIG.FHR_MAX - this.CONFIG.FHR_MIN) / fhrHeight;
+                            value = Math.abs(dy) * bpmPerPixel; labelText = `${Math.round(value)} bpm`;
+                        } else {
+                            const tocoHeight = this.CANVAS_HEIGHT * (1 / 3);
+                            const unitsPerPixel = (this.CONFIG.TOCO_MAX - this.CONFIG.TOCO_MIN) / tocoHeight;
+                            value = Math.abs(dy) * unitsPerPixel; labelText = `${Math.round(value)}`;
+                        }
+                        context.textAlign = 'left'; context.textBaseline = 'middle';
+                        context.fillText(labelText, Math.max(startX_range, endX_range) + 8, anno.startY + dy / 2);
+                    }
+                    break;
+                case 'dot':
+                    const x_dot = this.minsToX(anno.time);
+                    context.fillStyle = anno.color;
+                    context.beginPath(); context.arc(x_dot, anno.y, 5, 0, 2 * Math.PI); context.fill();
+                    break;
+                case 'box':
+                    const startX_box = this.minsToX(anno.startTime);
+                    const endX_box = this.minsToX(anno.endTime);
+                    context.strokeStyle = anno.color;
+                    context.strokeRect(startX_box, anno.y1, endX_box - startX_box, anno.y2 - anno.y1);
+                    if(anno.label) {
+                        context.fillStyle = anno.color;
+                        context.textAlign = 'left';
+                        context.fillText(anno.label, startX_box, anno.y1 - 5);
+                    }
+                    break;
+            }
+        }
+        
+        drawProofForAnnotation(anno, context) {
+            if (!anno || !anno.details) return;
+            const color = getComputedStyle(document.documentElement).getPropertyValue('--anno-proof');
+            context.strokeStyle = color; context.fillStyle = color; context.lineWidth = 2;
+
+            if (anno.label.includes('Variability')) {
+                const fullWidth = context.canvas.width / (window.devicePixelRatio || 1);
+                context.beginPath(); context.moveTo(0, anno.y1); context.lineTo(fullWidth, anno.y1); context.stroke();
+                context.beginPath(); context.moveTo(0, anno.y2); context.lineTo(fullWidth, anno.y2); context.stroke();
+
+                const arrowX = this.minsToX(anno.startTime + (anno.endTime - anno.startTime) / 2);
+                this._drawArrowedLine(context, arrowX, anno.y1, arrowX, anno.y2);
+                context.textAlign = 'left';
+                context.fillText(`${anno.details.magnitude.toFixed(0)} bpm`, arrowX + 5, anno.y1 + (anno.y2 - anno.y1) / 2);
+                return;
+            }
+
+            const baselineY = this.annotationEngine._fhrToY(this.currentCase.baseline);
+            const isAccel = anno.label === 'Accel';
+            
+            const startX = this.minsToX(anno.startTime);
+            const endX = this.minsToX(anno.endTime);
+            const midY = isAccel ? anno.y2 + 20 : anno.y1 - 20;
+            this._drawArrowedLine(context, startX, midY, endX, midY);
+            context.textAlign = 'center';
+            context.fillText(`${anno.details.duration.toFixed(1)}s`, startX + (endX - startX) / 2, midY + (isAccel ? 15 : -5));
+
+            const peakY = isAccel ? anno.y1 : anno.y2;
+            const x_vertical = endX + 15;
+            this._drawArrowedLine(context, x_vertical, baselineY, x_vertical, peakY);
+            context.textAlign = 'left';
+            context.fillText(`${anno.details.magnitude.toFixed(1)}bpm`, x_vertical + 5, baselineY + (peakY - baselineY) / 2);
+        }
+        
+        _drawArrowedLine(context, fromX, fromY, toX, toY) {
+            const headlen = 8;
+            context.beginPath(); context.moveTo(fromX, fromY); context.lineTo(toX, toY);
+            const angle1 = Math.atan2(toY - fromY, toX - fromX);
+            context.moveTo(toX, toY); context.lineTo(toX - headlen * Math.cos(angle1 - Math.PI / 6), toY - headlen * Math.sin(angle1 - Math.PI / 6));
+            context.moveTo(toX, toY); context.lineTo(toX - headlen * Math.cos(angle1 + Math.PI / 6), toY - headlen * Math.sin(angle1 + Math.PI / 6));
+            const angle2 = Math.atan2(fromY - toY, fromX - toX);
+            context.moveTo(fromX, fromY); context.lineTo(fromX - headlen * Math.cos(angle2 - Math.PI / 6), fromY - headlen * Math.sin(angle2 - Math.PI / 6));
+            context.moveTo(fromX, fromY); context.lineTo(fromX - headlen * Math.cos(angle2 + Math.PI / 6), fromY - headlen * Math.sin(angle2 + Math.PI / 6));
+            context.stroke();
+        }
+
+        setZoom(newLevel) {
+            if (newLevel < 0 || newLevel > 2) return;
+            const viewportWidth = this.canvasContainer.clientWidth;
+            const oldScrollLeft = this.canvasContainer.scrollLeft;
+            const oldZoomMultiplier = this.ZOOM_MULTIPLIERS[this.currentZoomLevel];
+            const oldCanvasWidth = viewportWidth * oldZoomMultiplier;
+            const scrollProportion = (oldCanvasWidth > 0) ? (oldScrollLeft + (viewportWidth / 2)) / oldCanvasWidth : 0;
+            this.currentZoomLevel = newLevel;
+            this.redrawCurrentCase(false);
+            const newZoomMultiplier = this.ZOOM_MULTIPLIERS[this.currentZoomLevel];
+            const newCanvasWidth = viewportWidth * newZoomMultiplier;
+            this.canvasContainer.scrollLeft = (newCanvasWidth * scrollProportion) - (viewportWidth / 2);
+            this.updateZoomButtons();
+        }
+
+        updateZoomButtons() {
+            this.zoomInBtn.disabled = this.currentZoomLevel === 2;
+            this.zoomOutBtn.disabled = this.currentZoomLevel === 0;
+        }
+
+        setMode(mode) {
+            this.currentMode = mode;
+            this.form.reset();
+            document.querySelectorAll('.feedback-list').forEach(el => el.innerHTML = '');
+            this.submitBtn.style.display = 'block'; // Always visible now
+            if (this.currentMode === 'tutor') {
+                this.submitBtn.style.display = 'none';
+            }
+        }
+        
+        generateNewCase() {
+            this.form.reset();
+            document.querySelectorAll('.feedback-list').forEach(el => el.innerHTML = '');
+            this.clearUserAnnotations();
+            this.systemAnnotations = [];
+            this.assessmentSubmitted = false;
+            this.areSystemAnnotationsVisible = false;
+            if (this.viewAnnotationsBtn) {
+                this.viewAnnotationsBtn.textContent = 'View Annotations';
+                this.viewAnnotationsBtn.classList.remove('selected');
+            }
+            this.setActiveTool(null);
+            this.currentCase = this.caseGenerator.createRandomCase();
+            this.correctAnswers = this.interpretationEngine.interpret(this.currentCase);
+            this.displayRiskFactors();
+            this.currentZoomLevel = 1;
+            this.redrawCurrentCase(true);
+            this.updateZoomButtons();
+        }
+
+        redrawCurrentCase(resetScroll = false) {
+            if (!this.currentCase) return;
+            if (!this.traceData || resetScroll) {
+                this.traceData = this.traceGenerator.generate(this.currentCase);
+            }
+            this.draw(this.traceData);
+            if(resetScroll) this.canvasContainer.scrollLeft = 0;
+        }
+
+        displayRiskFactors() {
+            if (this.currentCase.riskFactors.length > 0) {
+                const list = this.currentCase.riskFactors.map(rf => `<li>${rf}</li>`).join('');
+                this.riskDisplay.innerHTML = `<ul class="risk-factors">${list}</ul>`;
+            } else {
+                this.riskDisplay.innerHTML = 'Low Risk Pregnancy';
+            }
+        }
+        
+        checkField(selectElement) {
+            const field = selectElement.name;
+            const userAnswer = selectElement.value;
+            const correctAnswer = this.correctAnswers[field];
+            const feedbackEl = document.getElementById(`${field}-feedback`);
+            feedbackEl.innerHTML = '';
+            if (!userAnswer) return;
+
+            const li = document.createElement('li');
+            if (userAnswer === correctAnswer) {
+                li.className = 'fb-correct';
+                li.textContent = 'Correct!';
+            } else {
+                li.className = 'fb-incorrect';
+                li.textContent = `Incorrect. The correct classification is: ${this.getFriendlyText(field, correctAnswer)}`;
+            }
+            feedbackEl.appendChild(li);
+        }
+
+        handleSubmit() {
+            this.activeProofAnnotation = null;
+            const userAnswers = {};
+            this.form.querySelectorAll('select').forEach(el => { userAnswers[el.name] = el.value; });
+            let score = 0;
+            const resultsTbody = document.getElementById('results-tbody');
+            resultsTbody.innerHTML = '';
+            const fields = ['contractions', 'baseline', 'variability', 'accelerations', 'decelerations', 'overall'];
+            
+            // MODIFICATION: Added a map for labels since they were removed from the HTML
+            const fieldLabels = {
+                contractions: 'Contractions per 10 minutes:',
+                baseline: 'BRa: Baseline Rate (bpm)',
+                variability: 'V: Variability (bpm)',
+                accelerations: 'A: Accelerations',
+                decelerations: 'D: Decelerations',
+                overall: 'Overall Classification:'
+            };
+
+            fields.forEach(field => {
+                const isCorrect = userAnswers[field] === this.correctAnswers[field];
+                if (isCorrect) score++;
+                const row = document.createElement('tr');
+                row.className = isCorrect ? 'fb-correct' : 'fb-incorrect';
+                // MODIFICATION: Use the fieldLabels map instead of querying the DOM for a label
+                row.innerHTML = `<td>${fieldLabels[field]}</td><td>${this.getFriendlyText(field, userAnswers[field]) || 'Not answered'}</td><td>${this.getFriendlyText(field, this.correctAnswers[field])}</td>`;
+                resultsTbody.appendChild(row);
+            });
+            const scoreDisplay = document.getElementById('score-display');
+            const percentage = Math.round((score / fields.length) * 100);
+            scoreDisplay.textContent = `Your Score: ${score}/${fields.length} (${percentage}%)`;
+            if (percentage === 100) { scoreDisplay.className = 'score perfect'; document.getElementById('modal-title').textContent = "Excellent! Perfect Score!"; }
+            else if (percentage >= 60) { scoreDisplay.className = 'score good'; document.getElementById('modal-title').textContent = "Good Effort! Review the corrections below."; }
+            else { scoreDisplay.className = 'score bad'; document.getElementById('modal-title').textContent = "Needs Improvement. Let's review."; }
+            
+            this.assessmentSubmitted = true;
+            this.areSystemAnnotationsVisible = true;
+            this.viewAnnotationsBtn.textContent = 'Hide Annotations';
+            this.viewAnnotationsBtn.classList.add('selected');
+
+            if (this.systemAnnotations.length === 0) {
+                this.systemAnnotations = this.annotationEngine.generate(this.currentCase, this.traceData);
+            }
+            this.drawAnnotations(this.systemAnnotations, this.actx);
+            this.modal.style.display = 'flex';
+        }
+
+        toggleSystemAnnotations() {
+            this.areSystemAnnotationsVisible = !this.areSystemAnnotationsVisible;
+            this.viewAnnotationsBtn.textContent = this.areSystemAnnotationsVisible ? 'Hide Annotations' : 'View Annotations';
+            this.viewAnnotationsBtn.classList.toggle('selected', this.areSystemAnnotationsVisible);
+    
+            if (this.areSystemAnnotationsVisible && this.systemAnnotations.length === 0) {
+                this.systemAnnotations = this.annotationEngine.generate(this.currentCase, this.traceData);
+            }
+            
+            const annotationsToDraw = this.areSystemAnnotationsVisible ? this.systemAnnotations : this.userAnnotations;
+            this.drawAnnotations(annotationsToDraw, this.actx);
+        }
+        
+        closeResultsModal() {
+            this.modal.style.display = 'none';
+        }
+        
+        getFriendlyText(field, value) {
+            const select = document.getElementById(field); if (!select) return value;
+            const option = select.querySelector(`option[value="${value}"]`);
+            return option ? option.textContent : value;
+        }
+
+        draw(traceData) {
+            const viewportWidth = this.canvasContainer.clientWidth;
+            const zoomMultiplier = this.ZOOM_MULTIPLIERS[this.currentZoomLevel];
+            const totalCanvasWidth = viewportWidth * zoomMultiplier;
+            const dpr = window.devicePixelRatio || 1;
+            [this.canvas, this.annotationCanvas].forEach(canvas => {
+                canvas.width = totalCanvasWidth * dpr; canvas.height = this.CANVAS_HEIGHT * dpr;
+                canvas.style.width = `${totalCanvasWidth}px`; canvas.style.height = `${this.CANVAS_HEIGHT}px`;
+            });
+            this.canvasContainer.style.height = `${this.CANVAS_HEIGHT}px`;
+            this.ctx.scale(dpr, dpr); this.actx.scale(dpr, dpr);
+            const fhrHeight = this.CANVAS_HEIGHT * (2 / 3);
+            const tocoHeight = this.CANVAS_HEIGHT * (1 / 3);
+            this.drawGrid(totalCanvasWidth);
+            this.drawTrace(traceData.fhr, this.CONFIG.FHR_MIN, this.CONFIG.FHR_MAX, 0, totalCanvasWidth, fhrHeight);
+            this.drawTrace(traceData.toco, this.CONFIG.TOCO_MIN, this.CONFIG.TOCO_MAX, fhrHeight, totalCanvasWidth, tocoHeight);
+            const annotationsToDraw = (this.assessmentSubmitted || this.areSystemAnnotationsVisible) ? this.systemAnnotations : this.userAnnotations;
+            this.drawAnnotations(annotationsToDraw, this.actx);
+        }
+
+        drawGrid(width) {
+            const majorGridColor = '#e3b9b9'; const minorGridColor = '#f5e5e5'; const majorLineWidth = 0.75; const minorLineWidth = 0.4; const labelFont = '10px Arial'; const labelColor = '#555'; const fhrHeight = this.CANVAS_HEIGHT * (2 / 3); const tocoHeight = this.CANVAS_HEIGHT * (1 / 3); const cmToPx = width / this.CONFIG.MINS_TO_DISPLAY; this.ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ctg-grid-pink').trim(); this.ctx.fillRect(0, 0, width, this.CANVAS_HEIGHT); this.ctx.strokeStyle = minorGridColor; this.ctx.lineWidth = minorLineWidth; for (let i = 0; i < this.CONFIG.MINS_TO_DISPLAY; i++) { const x = (i + 0.5) * cmToPx; this.ctx.beginPath(); this.ctx.moveTo(x, 0); this.ctx.lineTo(x, this.CANVAS_HEIGHT); this.ctx.stroke(); } this.ctx.strokeStyle = majorGridColor; this.ctx.lineWidth = majorLineWidth; for (let i = 0; i <= this.CONFIG.MINS_TO_DISPLAY; i++) { const x = i * cmToPx; this.ctx.beginPath(); this.ctx.moveTo(x, 0); this.ctx.lineTo(x, this.CANVAS_HEIGHT); this.ctx.stroke(); if (i > 0 && i < this.CONFIG.MINS_TO_DISPLAY) { this.ctx.fillStyle = labelColor; this.ctx.font = '12px Arial'; this.ctx.textAlign = 'center'; this.ctx.fillText(i, x, 12); } } this.ctx.textAlign = 'left'; this.ctx.textBaseline = 'middle'; this.ctx.strokeStyle = minorGridColor; this.ctx.lineWidth = minorLineWidth; for (let i = this.CONFIG.FHR_MIN + 10; i <= this.CONFIG.FHR_MAX; i += 10) { if (i % 20 === 0) continue; const y = fhrHeight - ((i - this.CONFIG.FHR_MIN) / (this.CONFIG.FHR_MAX - this.CONFIG.FHR_MIN)) * fhrHeight; this.ctx.beginPath(); this.ctx.moveTo(0, y); this.ctx.lineTo(width, y); this.ctx.stroke(); } this.ctx.strokeStyle = majorGridColor; this.ctx.lineWidth = majorLineWidth; for (let i = 60; i <= 200; i += 20) { const y = fhrHeight - ((i - this.CONFIG.FHR_MIN) / (this.CONFIG.FHR_MAX - this.CONFIG.FHR_MIN)) * fhrHeight; this.ctx.beginPath(); this.ctx.moveTo(0, y); this.ctx.lineTo(width, y); this.ctx.stroke(); this.ctx.fillStyle = labelColor; this.ctx.font = labelFont; this.ctx.fillText(i, 5, y); } this.ctx.strokeStyle = minorGridColor; this.ctx.lineWidth = minorLineWidth; for (let i = this.CONFIG.TOCO_MIN + 10; i <= this.CONFIG.TOCO_MAX; i += 10) { if (i % 20 === 0) continue; const y = fhrHeight + (tocoHeight - (((i - this.CONFIG.TOCO_MIN) / (this.CONFIG.TOCO_MAX - this.CONFIG.TOCO_MIN)) * tocoHeight)); this.ctx.beginPath(); this.ctx.moveTo(0, y); this.ctx.lineTo(width, y); this.ctx.stroke(); } this.ctx.strokeStyle = majorGridColor; this.ctx.lineWidth = majorLineWidth; for (let i = 0; i <= 100; i += 20) { const y = fhrHeight + (tocoHeight - (((i - this.CONFIG.TOCO_MIN) / (this.CONFIG.TOCO_MAX - this.CONFIG.TOCO_MIN)) * tocoHeight)); this.ctx.beginPath(); this.ctx.moveTo(0, y); this.ctx.lineTo(width, y); this.ctx.stroke(); this.ctx.fillStyle = labelColor; this.ctx.font = labelFont; this.ctx.fillText(i, 5, y); }
+        }
+        drawTrace(data, minVal, maxVal, yOffset, width, height) {
+            this.ctx.strokeStyle = this.traceColor; this.ctx.lineWidth = 1.2; this.ctx.beginPath(); const stepX = width / (data.length - 1); data.forEach((point, i) => { const x = i * stepX; const y = yOffset + height - ((point - minVal) / (maxVal - minVal)) * height; if (i === 0) { this.ctx.moveTo(x, y); } else { this.ctx.lineTo(x, y); } }); this.ctx.stroke();
+        }
+    }
+    
+    const rand = (min, max) => Math.random() * (max - min) + min; const randInt = (min, max) => Math.floor(rand(min, max + 1)); const pick = (arr) => arr[randInt(0, arr.length - 1)];
+    const CaseGenerator = class {
+        createRandomCase() {
+            const caseConfig = {};
+            const overallRoll = Math.random();
+            if (overallRoll < 0.4) { this.buildReassuring(caseConfig); } 
+            else if (overallRoll < 0.75) { this.buildSuspicious(caseConfig); } 
+            else { this.buildPathological(caseConfig); }
+            this.addRiskFactors(caseConfig);
+            return caseConfig;
+        }
+
+        buildReassuring(config) {
+            config.baseline = randInt(110, 160);
+            config.variability = randInt(6, 25);
+            config.accelerations = true;
+            config.contractionsPer10Min = randInt(2, 5);
+            const decelRoll = Math.random();
+            if (decelRoll < 0.4) { config.decelerations = [{ type: 'none' }]; }
+            else if (decelRoll < 0.8) { 
+                config.decelerations = Array(randInt(1, 5)).fill(0).map(()=> ({ 
+                    type: 'early', 
+                    duration: randInt(20, 50),
+                    magnitude: rand(18, 45)
+                })); 
+            }
+            else { 
+                config.decelerations = Array(randInt(1, 5)).fill(0).map(()=> ({ 
+                    type: 'variable_typical', 
+                    duration: randInt(20, 50),
+                    magnitude: rand(20, 55)
+                })); 
+            }
+        }
+
+        buildSuspicious(config) {
+            this.buildReassuring(config);
+            const featureToTweak = pick(['baseline', 'variability', 'decelerations']);
+            switch(featureToTweak) {
+                case 'baseline': config.baseline = pick([randInt(100, 109), randInt(161, 180)]); break;
+                case 'variability':
+                    config.variability = pick([rand(3, 4.9), rand(25.1, 30)]);
+                    if (config.variability < 5) config.reducedVariabilityDuration = randInt(30, 50);
+                    else config.increasedVariabilityDuration = randInt(15, 25);
+                    break;
+                case 'decelerations':
+                    config.decelerations.push(pick([
+                        { type: 'late', inOver50Percent: true, duration: randInt(15, 29), magnitude: rand(25, 50) },
+                        { type: 'variable_atypical', inOver50Percent: false, duration: randInt(31, 50), magnitude: rand(30, 60) }
+                    ]));
+                    break;
+            }
+        }
+
+        buildPathological(config) {
+            this.buildReassuring(config);
+            const pathologicalFeature = pick(['baseline', 'variability', 'decelerations', 'combo']);
+            switch(pathologicalFeature) {
+                case 'baseline': config.baseline = pick([randInt(80, 99), randInt(181, 200)]); break;
+                case 'variability':
+                    const subType = pick(['reduced', 'increased', 'sinusoidal']);
+                    if (subType === 'sinusoidal') {
+                        config.isSinusoidal = true; config.variability = 2; config.accelerations = false; config.decelerations = [{ type: 'none' }];
+                    } else if (subType === 'reduced') {
+                        config.variability = rand(2, 4.9); config.reducedVariabilityDuration = randInt(51, 60);
+                    } else {
+                        config.variability = rand(25.1, 35); config.increasedVariabilityDuration = randInt(26, 40);
+                    }
+                    break;
+                case 'decelerations':
+                    const decelType = pick(['late', 'variable_atypical', 'prolonged']);
+                    if (decelType === 'prolonged') { config.decelerations = [{ type: 'prolonged', duration: rand(181, 300), magnitude: rand(40, 80) }]; }
+                    else if (decelType === 'late') { config.decelerations.push({ type: 'late', inOver50Percent: true, duration: randInt(31, 50), magnitude: rand(30, 60) }); }
+                    else { config.decelerations.push({ type: 'variable_atypical', inOver50Percent: true, duration: randInt(31, 50), magnitude: rand(35, 70) }); }
+                    break;
+                case 'combo':
+                    this.buildSuspicious(config);
+                    const tempConfig = {}; this.buildSuspicious(tempConfig);
+                    const secondFeature = pick(['baseline', 'variability']);
+                    config[secondFeature] = tempConfig[secondFeature];
+                    break;
+            }
+        }
+
+        addRiskFactors(config) { const allRiskFactors = [ "Gestational diabetes", "Hypertension", "Previous C-section", "Post-date gestation", "Intrauterine growth restriction", "Pre-eclampsia", "Maternal smoking", "Multiple gestation" ]; config.riskFactors = []; const hasRisk = Math.random() < 0.5; if(hasRisk) { const numFactors = randInt(1, 3); for(let i=0; i<numFactors; i++) { config.riskFactors.push(pick(allRiskFactors)); } } }
+    }
+    const TraceGenerator = class {
+        constructor(app) { this.app = app; }
+        
+        generate(config) {
+            const totalPoints = this.app.CONFIG.POINTS_PER_MIN * this.app.CONFIG.MINS_TO_DISPLAY;
+            const fhrData = new Array(totalPoints).fill(config.baseline);
+            const tocoData = new Array(totalPoints).fill(10);
+            let intendedEvents = [];
+
+            this.addContractions(tocoData, config);
+
+            if (config.isSinusoidal) {
+                this.addSinusoidalPattern(fhrData, config);
+            } 
+            else {
+                // 1. Create the clean waveform with overlapping events.
+                this.addAccelerations(fhrData, config, intendedEvents);
+                this.addDecelerations(fhrData, config, tocoData, intendedEvents);
+
+                // 2. Analyze the combined waveform to find the *actual* observable events.
+                const refinedEvents = this.analyzeAndRefineEvents(fhrData, intendedEvents, config);
+                
+                // 3. Apply realistic variability to the final waveform.
+                this.applyRealisticVariability(fhrData, config);
+                
+                // 4. Return the final trace with the *refined* events list.
+                return { fhr: fhrData, toco: tocoData, events: refinedEvents };
+            }
+
+            // Fallback for sinusoidal or other simple cases
+            return { fhr: fhrData, toco: tocoData, events: intendedEvents };
+        }
+        
+        analyzeAndRefineEvents(cleanFhr, originalEvents, config) {
+            const P_PER_SEC = this.app.CONFIG.POINTS_PER_MIN / 60;
+            const MIN_DUR_POINTS = 15 * P_PER_SEC;
+            const MIN_MAG = 15;
+
+            // Handle prolonged decels separately as they are not refined in the same way.
+            const prolonged = originalEvents.find(e => e.type === 'decel' && e.subType === 'prolonged');
+            
+            const otherEvents = originalEvents.filter(e => !(e.type === 'decel' && e.subType === 'prolonged'));
+
+            // First, refine all other events individually. This may create duplicates if events merged on the trace.
+            const tempRefined = [];
+            for (const event of otherEvents) {
+                const eventSegment = cleanFhr.slice(event.startIdx, event.startIdx + event.duration);
+                if (eventSegment.length === 0) continue;
+
+                let peakMagnitude, peakIndex;
+
+                if (event.type === 'accel') {
+                    const maxVal = Math.max(...eventSegment);
+                    peakMagnitude = maxVal - config.baseline;
+                    peakIndex = event.startIdx + eventSegment.indexOf(maxVal);
+                } else { // decel
+                    const minVal = Math.min(...eventSegment);
+                    peakMagnitude = config.baseline - minVal;
+                    peakIndex = event.startIdx + eventSegment.indexOf(minVal);
+                }
+                
+                if (peakMagnitude < MIN_MAG) continue;
+
+                let actualStartIdx = peakIndex;
+                let actualEndIdx = peakIndex;
+                const threshold = config.baseline + (event.type === 'accel' ? 2 : -2); 
+
+                for (let i = peakIndex; i >= 0; i--) {
+                    if ((event.type === 'accel' && cleanFhr[i] <= threshold) || (event.type === 'decel' && cleanFhr[i] >= threshold)) {
+                        actualStartIdx = i; break;
+                    }
+                    actualStartIdx = i; 
+                }
+
+                for (let i = peakIndex; i < cleanFhr.length; i++) {
+                    if ((event.type === 'accel' && cleanFhr[i] <= threshold) || (event.type === 'decel' && cleanFhr[i] >= threshold)) {
+                        actualEndIdx = i; break;
+                    }
+                    actualEndIdx = i; 
+                }
+
+                const actualDurationPoints = actualEndIdx - actualStartIdx;
+                if (actualDurationPoints < MIN_DUR_POINTS) continue;
+                
+                tempRefined.push({
+                    ...event,
+                    startIdx: actualStartIdx,
+                    duration: actualDurationPoints,
+                    magnitude: peakMagnitude
+                });
+            }
+
+            // Now, group events by type and merge any that overlap.
+            const eventGroups = tempRefined.reduce((acc, event) => {
+                const key = `${event.type}-${event.subType || 'default'}`;
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(event);
+                return acc;
+            }, {});
+
+            const finalEvents = [];
+            if (prolonged) {
+                finalEvents.push(prolonged);
+            }
+
+            for (const key in eventGroups) {
+                const eventsToMerge = eventGroups[key];
+                if (eventsToMerge.length < 2) {
+                    finalEvents.push(...eventsToMerge);
+                    continue;
+                }
+
+                eventsToMerge.sort((a, b) => a.startIdx - b.startIdx);
+                
+                const groupMerged = [eventsToMerge[0]];
+                
+                for (let i = 1; i < eventsToMerge.length; i++) {
+                    const current = eventsToMerge[i];
+                    const last = groupMerged[groupMerged.length - 1];
+                    
+                    const lastEndIdx = last.startIdx + last.duration;
+
+                    if (current.startIdx < lastEndIdx) { // Overlap detected
+                        const newEndIdx = Math.max(lastEndIdx, current.startIdx + current.duration);
+                        last.duration = newEndIdx - last.startIdx;
+                        last.magnitude = Math.max(last.magnitude, current.magnitude);
+                    } else {
+                        groupMerged.push(current);
+                    }
+                }
+                finalEvents.push(...groupMerged);
+            }
+            
+            return finalEvents;
+        }
+
+        applyRealisticVariability(fhr, config) {
+            const eventTrace = [...fhr]; 
+            const variabilityAmount = config.variability;
+
+            for (let i = 1; i < fhr.length; i++) {
+                const targetPoint = eventTrace[i];
+                const previousPoint = fhr[i - 1];
+                const randomChange = (Math.random() - 0.5) * (variabilityAmount / 1.2);
+                let nextPoint = (previousPoint * 0.75) + (targetPoint * 0.25) + randomChange;
+                const maxDeviation = variabilityAmount; 
+                if (Math.abs(nextPoint - targetPoint) > maxDeviation) {
+                    nextPoint = targetPoint + Math.sign(nextPoint - targetPoint) * maxDeviation;
+                }
+                fhr[i] = nextPoint;
+            }
+        }
+
+        addContractions(toco, config) { if (config.contractionsPer10Min === 0) return; const contractionDurationPoints = randInt(45, 90) * (this.app.CONFIG.POINTS_PER_MIN / 60); const numContractions = config.contractionsPer10Min * (this.app.CONFIG.MINS_TO_DISPLAY / 10); const spacing = toco.length / numContractions; for (let i = 0; i < numContractions; i++) { const peakPoint = Math.floor(i * spacing + rand(0, spacing/2)); const startPoint = Math.max(0, peakPoint - contractionDurationPoints / 2); for (let j = 0; j < contractionDurationPoints; j++) { const idx = Math.floor(startPoint + j); if (idx >= toco.length) break; const progress = j / contractionDurationPoints; const amplitude = Math.sin(progress * Math.PI) * rand(50, 80); toco[idx] = Math.min(100, toco[idx] + amplitude); } } }
+        addSinusoidalPattern(fhr, config) { const cyclesPerMin = rand(2, 5); const pointsPerMin = this.app.CONFIG.POINTS_PER_MIN; const frequency = (2 * Math.PI * cyclesPerMin) / pointsPerMin; const amplitude = rand(5, 15); for (let i = 0; i < fhr.length; i++) { fhr[i] = config.baseline + Math.sin(i * frequency) * amplitude; } }
+        
+        addAccelerations(fhr, config, events) {
+            if (!config.accelerations) return;
+            const numAccels = randInt(1, 6) * (this.app.CONFIG.MINS_TO_DISPLAY / 10);
+            
+            for (let i = 0; i < numAccels; i++) {
+                const duration = randInt(16, 40) * (this.app.CONFIG.POINTS_PER_MIN / 60);
+                const startIdx = randInt(0, fhr.length - duration);
+                const magnitude = rand(16, 35);
+                events.push({ type: 'accel', startIdx, duration, magnitude });
+                
+                for (let j = 0; j < duration; j++) {
+                    const idx = Math.floor(startIdx + j);
+                    if (idx >= fhr.length) break;
+                    const progress = j / duration;
+                    fhr[idx] += Math.sin(progress * Math.PI) * magnitude;
+                }
+            }
+        }
+
+        addDecelerations(fhr, config, toco, events) {
+            const decelTemplates = [...config.decelerations.filter(d => d.type !== 'none')];
+            if (decelTemplates.length === 0) return;
+            
+            const prolongedDecel = decelTemplates.find(d => d.type === 'prolonged');
+            if(prolongedDecel) {
+                const duration = prolongedDecel.duration * (this.app.CONFIG.POINTS_PER_MIN / 60);
+                const startIdx = randInt(fhr.length * 0.2, fhr.length * 0.5);
+                const magnitude = prolongedDecel.magnitude;
+                this.applyDecelShape(fhr, startIdx, duration, magnitude);
+                events.push({ type: 'decel', subType: 'prolonged', startIdx, duration, magnitude });
+                return; 
+            }
+
+            let contractionPeaks = this.findContractionPeaks(toco);
+            
+            for (const template of decelTemplates) {
+                if (contractionPeaks.length === 0) break;
+                const peakIdx = contractionPeaks.splice(randInt(0, contractionPeaks.length - 1), 1)[0];
+                
+                switch(template.type) {
+                    case 'early': this.applyEarlyDecel(fhr, peakIdx, template, events); break;
+                    case 'late': this.applyLateDecel(fhr, peakIdx, template, events); break;
+                    case 'variable_typical': this.applyVariableDecel(fhr, peakIdx, template, false, events); break;
+                    case 'variable_atypical': this.applyVariableDecel(fhr, peakIdx, template, true, events); break;
+                }
+            }
+        }
+        
+        findContractionPeaks(toco) { const peaks = []; let i = 0; while (i < toco.length) { if (toco[i] > 30) { let peakIdx = i; for (let j = i; j < toco.length && toco[j] > 10; j++) { if (toco[j] > toco[peakIdx]) peakIdx = j; i = j; } peaks.push(peakIdx); } i++; } return peaks; }
+        
+        applyDecelShape(fhr, start, duration, magnitude) { 
+            for (let j = 0; j < duration; j++) { 
+                const idx = Math.floor(start + j); 
+                if (idx >= fhr.length || idx < 0) continue; 
+                const progress = j / duration; 
+                const drop = Math.sin(progress * Math.PI) * magnitude; 
+                fhr[idx] -= drop; 
+            } 
+        }
+        
+        applyEarlyDecel(fhr, peakIdx, template, events) {
+            const duration = template.duration * (this.app.CONFIG.POINTS_PER_MIN / 60);
+            const startIdx = peakIdx - (duration / 2);
+            const magnitude = template.magnitude;
+            this.applyDecelShape(fhr, startIdx, duration, magnitude);
+            events.push({ type: 'decel', subType: 'early', startIdx, duration, magnitude });
+        }
+
+        applyLateDecel(fhr, peakIdx, template, events) {
+            const duration = template.duration * (this.app.CONFIG.POINTS_PER_MIN / 60);
+            const lag = 15 * (this.app.CONFIG.POINTS_PER_MIN / 60);
+            const nadirIdx = peakIdx + lag;
+            const startIdx = nadirIdx - (duration / 2);
+            const magnitude = template.magnitude;
+            this.applyDecelShape(fhr, startIdx, duration, magnitude);
+            events.push({ type: 'decel', subType: 'late', startIdx, duration, magnitude });
+        }
+        
+        applyVariableDecel(fhr, peakIdx, template, isAtypical, events) {
+            const duration = template.duration * (this.app.CONFIG.POINTS_PER_MIN / 60);
+            const offset = randInt(-15, 15) * (this.app.CONFIG.POINTS_PER_MIN / 60);
+            const startIdx = peakIdx + offset;
+            const magnitude = template.magnitude;
+            const hasShoulders = !isAtypical && Math.random() > 0.2; const shoulderMag = rand(10, 15); const shoulderDur = 15 * (this.app.CONFIG.POINTS_PER_MIN / 60); 
+            if(hasShoulders) { for(let i=0; i<shoulderDur; i++) { const idx = Math.floor(startIdx - shoulderDur + i); if (idx >= fhr.length || idx < 0) continue; fhr[idx] += shoulderMag * Math.sin((i/shoulderDur)*Math.PI); } }
+            const dropDuration = duration * 0.4; for(let i=0; i<dropDuration; i++) { const idx = Math.floor(startIdx+i); if (idx >= fhr.length || idx < 0) continue; fhr[idx] -= magnitude * (i/dropDuration); }
+            for(let i=0; i<duration*0.2; i++) { const idx = Math.floor(startIdx+dropDuration+i); if (idx >= fhr.length || idx < 0) continue; fhr[idx] -= magnitude; }
+            const recoveryDuration = duration * 0.4; const recoveryStart = startIdx+dropDuration+duration*0.2; for(let i=0; i<recoveryDuration; i++) { const idx = Math.floor(recoveryStart+i); if (idx >= fhr.length || idx < 0) continue; fhr[idx] -= magnitude * (1-(i/recoveryDuration)); }
+            if(hasShoulders) { const postShoulderStart = startIdx + duration; for(let i=0; i<shoulderDur; i++) { const idx = Math.floor(postShoulderStart + i); if (idx >= fhr.length || idx < 0) continue; fhr[idx] += shoulderMag * Math.sin((i/shoulderDur)*Math.PI); } }
+            events.push({ type: 'decel', subType: template.type, startIdx, duration, magnitude });
+        }
+    }
+    const InterpretationEngine = class {
+        constructor(app) { this.app = app; }
+        interpret(config) {
+            const answers = {}; let nonReassuringCount = 0; let abnormalCount = 0;
+            answers.contractions = config.contractionsPer10Min > 5 ? '>5' : '≤5';
+            if (config.baseline >= 110 && config.baseline <= 160) answers.baseline = 'reassuring'; else if ((config.baseline >= 100 && config.baseline <= 109) || (config.baseline >= 161 && config.baseline <= 180)) { answers.baseline = 'non-reassuring'; nonReassuringCount++; } else { answers.baseline = 'abnormal'; abnormalCount++; }
+            if (config.isSinusoidal) { answers.variability = 'sinusoidal'; abnormalCount++; } else if (config.variability >= 5 && config.variability <= 25) { answers.variability = 'reassuring'; } else if ((config.variability < 5 && config.reducedVariabilityDuration >= 30 && config.reducedVariabilityDuration <= 50) || (config.variability > 25 && config.increasedVariabilityDuration >= 15 && config.increasedVariabilityDuration <= 25)) { answers.variability = 'non-reassuring'; nonReassuringCount++; } else { answers.variability = 'abnormal'; abnormalCount++; }
+            answers.accelerations = config.accelerations ? 'present' : 'absent';
+            
+            // New Deceleration Interpretation
+            const decelRank = { none: 0, early: 1, variable_typical: 2, variable_atypical: 3, late: 4, prolonged: 5 };
+            let worstDecel = { type: 'none' };
+            if (config.decelerations && config.decelerations.length > 0) {
+                 worstDecel = config.decelerations.reduce((prev, curr) => decelRank[curr.type] > decelRank[prev.type] ? curr : prev);
+            }
+            answers.decelerations = worstDecel.type;
+
+            switch(worstDecel.type) {
+                case 'variable_atypical':
+                    if (worstDecel.inOver50Percent) abnormalCount++; else nonReassuringCount++;
+                    break;
+                case 'late':
+                    if (worstDecel.duration > 30) abnormalCount++; else nonReassuringCount++;
+                    break;
+                case 'prolonged':
+                    if (worstDecel.duration > 180) abnormalCount++; else nonReassuringCount++;
+                    break;
+            }
+
+            if (abnormalCount > 0 || nonReassuringCount >= 2) { answers.overall = 'pathological'; }
+            else if (nonReassuringCount === 1) { answers.overall = 'suspicious'; }
+            else { answers.overall = 'reassuring'; }
+            return answers;
+        }
+    }
+    
+    const AnnotationEngine = class {
+        constructor(app) { this.app = app; }
+        
+        generate(caseData, traceData) {
+            const annotations = [];
+            
+            // Draw baseline
+            const baselineY = this._fhrToY(caseData.baseline);
+            annotations.push({ type: 'hline', y: baselineY, color: getComputedStyle(document.documentElement).getPropertyValue('--anno-baseline'), label: `Baseline: ${caseData.baseline} bpm`, isSystem: true });
+
+            // Draw variability band
+            if (!caseData.isSinusoidal) {
+                const varHalf = caseData.variability / 2;
+                const varTopY = this._fhrToY(caseData.baseline + varHalf);
+                const varBottomY = this._fhrToY(caseData.baseline - varHalf);
+                annotations.push({ 
+                    type: 'box', 
+                    startTime: 10, endTime: 20, 
+                    y1: varTopY, y2: varBottomY, 
+                    color: 'rgba(59, 130, 246, 0.8)', 
+                    label: `Variability Band: ~${caseData.variability.toFixed(0)} bpm`, 
+                    isSystem: true,
+                    details: { magnitude: caseData.variability }
+                });
+            }
+            
+            // Create annotations from the ground-truth event data
+            if (traceData.events) {
+                traceData.events.forEach(event => {
+                    const annotation = this._createAnnotationFromEvent(event, caseData);
+                    if (annotation) annotations.push(annotation);
+                });
+            }
+            
+            return annotations;
+        }
+
+        _createAnnotationFromEvent(event, caseData) {
+            const isAccel = event.type === 'accel';
+            let label;
+            if (isAccel) {
+                label = 'Accel';
+            } else {
+                label = event.subType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            }
+
+            const baseline = caseData.baseline;
+            
+            // Calculate vertical position based on ground truth magnitude
+            const baselineY = this._fhrToY(baseline);
+            const peakOrNadirY = this._fhrToY(isAccel ? baseline + event.magnitude : baseline - event.magnitude);
+            
+            const y1 = isAccel ? peakOrNadirY : baselineY;
+            const y2 = isAccel ? baselineY : peakOrNadirY;
+            const color = isAccel ? getComputedStyle(document.documentElement).getPropertyValue('--anno-accel') : getComputedStyle(document.documentElement).getPropertyValue('--anno-decel');
+            
+            // Calculate horizontal position and duration details from ground truth
+            const startTime = this._idxToMins(event.startIdx);
+            const endTime = this._idxToMins(event.startIdx + event.duration);
+            const pointsPerSec = this.app.CONFIG.POINTS_PER_MIN / 60;
+            const durationSeconds = event.duration / pointsPerSec;
+
+            return {
+                type: 'box',
+                startTime: startTime,
+                endTime: endTime,
+                y1: y1,
+                y2: y2,
+                color: color,
+                label: label,
+                isSystem: true,
+                details: { magnitude: event.magnitude, duration: durationSeconds }
+            };
+        }
+        
+        _idxToMins(idx) { return idx / this.app.CONFIG.POINTS_PER_MIN; }
+        _fhrToY(fhr) { const fhrHeight = this.app.CANVAS_HEIGHT * (2 / 3); return fhrHeight - ((fhr - this.app.CONFIG.FHR_MIN) / (this.app.CONFIG.FHR_MAX - this.app.CONFIG.FHR_MIN)) * fhrHeight; }
+        _tocoToY(toco) { const fhrHeight = this.app.CANVAS_HEIGHT * (2 / 3); const tocoHeight = this.app.CANVAS_HEIGHT * (1 / 3); return fhrHeight + (tocoHeight - (((toco - this.app.CONFIG.TOCO_MIN) / (this.app.CONFIG.TOCO_MAX - this.app.CONFIG.TOCO_MIN)) * tocoHeight)); }
+    }
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const app = new CTGApp();
+        app.caseGenerator = new CaseGenerator();
+        app.traceGenerator = new TraceGenerator(app);
+        app.interpretationEngine = new InterpretationEngine(app);
+        app.annotationEngine = new AnnotationEngine(app);
+        app.annotationEngine._fhrToY = app.annotationEngine._fhrToY.bind(app.annotationEngine);
+        app.init(); 
+    });
+    </script>
+</body>
+</html>
