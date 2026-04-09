@@ -1036,146 +1036,108 @@
                 this.addSinusoidalPattern(fhrData, config);
             } 
             else {
-                // 1. Create the clean waveform with overlapping events.
+                // Add pure mathematical physiological shapes without lag
                 this.addAccelerations(fhrData, config, intendedEvents);
                 this.addDecelerations(fhrData, config, tocoData, intendedEvents);
+                
+                // Merge cleanly before noise so bounding boxes act correctly
+                intendedEvents = this.mergeEvents(intendedEvents);
 
-                // 2. Analyze the combined waveform to find the *actual* observable events.
-                const refinedEvents = this.analyzeAndRefineEvents(fhrData, intendedEvents, config);
-                
-                // 3. Apply realistic variability to the final waveform.
+                // Zero-mean variability added ON TOP. Doesn't shift event timing.
                 this.applyRealisticVariability(fhrData, config);
-                
-                // 4. Return the final trace with the *refined* events list.
-                return { fhr: fhrData, toco: tocoData, events: refinedEvents };
             }
 
-            // Fallback for sinusoidal or other simple cases
+            // Add realistic noise to the Toco trace as well
+            for (let i = 0; i < tocoData.length; i++) {
+                tocoData[i] += (Math.random() - 0.5) * 4;
+                tocoData[i] = Math.max(0, Math.min(100, tocoData[i]));
+            }
+
             return { fhr: fhrData, toco: tocoData, events: intendedEvents };
         }
-        
-        analyzeAndRefineEvents(cleanFhr, originalEvents, config) {
-            const P_PER_SEC = this.app.CONFIG.POINTS_PER_MIN / 60;
-            const MIN_DUR_POINTS = 15 * P_PER_SEC;
-            const MIN_MAG = 15;
 
-            // Handle prolonged decels separately as they are not refined in the same way.
-            const prolonged = originalEvents.find(e => e.type === 'decel' && e.subType === 'prolonged');
+        mergeEvents(events) {
+            if (events.length === 0) return events;
+            const accels = events.filter(e => e.type === 'accel').sort((a,b) => a.startIdx - b.startIdx);
+            const decels = events.filter(e => e.type === 'decel').sort((a,b) => a.startIdx - b.startIdx);
             
-            const otherEvents = originalEvents.filter(e => !(e.type === 'decel' && e.subType === 'prolonged'));
-
-            // First, refine all other events individually. This may create duplicates if events merged on the trace.
-            const tempRefined = [];
-            for (const event of otherEvents) {
-                const eventSegment = cleanFhr.slice(event.startIdx, event.startIdx + event.duration);
-                if (eventSegment.length === 0) continue;
-
-                let peakMagnitude, peakIndex;
-
-                if (event.type === 'accel') {
-                    const maxVal = Math.max(...eventSegment);
-                    peakMagnitude = maxVal - config.baseline;
-                    peakIndex = event.startIdx + eventSegment.indexOf(maxVal);
-                } else { // decel
-                    const minVal = Math.min(...eventSegment);
-                    peakMagnitude = config.baseline - minVal;
-                    peakIndex = event.startIdx + eventSegment.indexOf(minVal);
-                }
-                
-                if (peakMagnitude < MIN_MAG) continue;
-
-                let actualStartIdx = peakIndex;
-                let actualEndIdx = peakIndex;
-                const threshold = config.baseline + (event.type === 'accel' ? 2 : -2); 
-
-                for (let i = peakIndex; i >= 0; i--) {
-                    if ((event.type === 'accel' && cleanFhr[i] <= threshold) || (event.type === 'decel' && cleanFhr[i] >= threshold)) {
-                        actualStartIdx = i; break;
-                    }
-                    actualStartIdx = i; 
-                }
-
-                for (let i = peakIndex; i < cleanFhr.length; i++) {
-                    if ((event.type === 'accel' && cleanFhr[i] <= threshold) || (event.type === 'decel' && cleanFhr[i] >= threshold)) {
-                        actualEndIdx = i; break;
-                    }
-                    actualEndIdx = i; 
-                }
-
-                const actualDurationPoints = actualEndIdx - actualStartIdx;
-                if (actualDurationPoints < MIN_DUR_POINTS) continue;
-                
-                tempRefined.push({
-                    ...event,
-                    startIdx: actualStartIdx,
-                    duration: actualDurationPoints,
-                    magnitude: peakMagnitude
-                });
-            }
-
-            // Now, group events by type and merge any that overlap.
-            const eventGroups = tempRefined.reduce((acc, event) => {
-                const key = `${event.type}-${event.subType || 'default'}`;
-                if (!acc[key]) acc[key] = [];
-                acc[key].push(event);
-                return acc;
-            }, {});
-
-            const finalEvents = [];
-            if (prolonged) {
-                finalEvents.push(prolonged);
-            }
-
-            for (const key in eventGroups) {
-                const eventsToMerge = eventGroups[key];
-                if (eventsToMerge.length < 2) {
-                    finalEvents.push(...eventsToMerge);
-                    continue;
-                }
-
-                eventsToMerge.sort((a, b) => a.startIdx - b.startIdx);
-                
-                const groupMerged = [eventsToMerge[0]];
-                
-                for (let i = 1; i < eventsToMerge.length; i++) {
-                    const current = eventsToMerge[i];
-                    const last = groupMerged[groupMerged.length - 1];
+            const mergeList = (list) => {
+                if (list.length === 0) return [];
+                const merged = [list[0]];
+                for (let i = 1; i < list.length; i++) {
+                    const current = list[i];
+                    const last = merged[merged.length - 1];
+                    const lastEnd = last.startIdx + last.duration;
                     
-                    const lastEndIdx = last.startIdx + last.duration;
-
-                    if (current.startIdx < lastEndIdx) { // Overlap detected
-                        const newEndIdx = Math.max(lastEndIdx, current.startIdx + current.duration);
-                        last.duration = newEndIdx - last.startIdx;
+                    if (current.startIdx <= lastEnd) {
+                        const newEnd = Math.max(lastEnd, current.startIdx + current.duration);
+                        last.duration = newEnd - last.startIdx;
                         last.magnitude = Math.max(last.magnitude, current.magnitude);
+                        if (current.subType === 'prolonged' || last.subType === 'prolonged') last.subType = 'prolonged';
                     } else {
-                        groupMerged.push(current);
+                        merged.push(current);
                     }
                 }
-                finalEvents.push(...groupMerged);
-            }
-            
-            return finalEvents;
+                return merged;
+            };
+
+            return [...mergeList(accels), ...mergeList(decels)];
         }
 
         applyRealisticVariability(fhr, config) {
-            const eventTrace = [...fhr]; 
-            const variabilityAmount = config.variability;
-
-            for (let i = 1; i < fhr.length; i++) {
-                const targetPoint = eventTrace[i];
-                const previousPoint = fhr[i - 1];
-                const randomChange = (Math.random() - 0.5) * (variabilityAmount / 1.2);
-                let nextPoint = (previousPoint * 0.75) + (targetPoint * 0.25) + randomChange;
-                const maxDeviation = variabilityAmount; 
-                if (Math.abs(nextPoint - targetPoint) > maxDeviation) {
-                    nextPoint = targetPoint + Math.sign(nextPoint - targetPoint) * maxDeviation;
-                }
-                fhr[i] = nextPoint;
+            const varAmount = config.variability;
+            const amplitude = varAmount / 2;
+            let wander = 0;
+            
+            for (let i = 0; i < fhr.length; i++) {
+                // Low-frequency baseline wandering
+                wander += (Math.random() - 0.5) * (amplitude * 0.15);
+                // Keep wander within reasonable physiological bounds
+                if (wander > amplitude * 0.8) wander -= 0.1;
+                if (wander < -amplitude * 0.8) wander += 0.1;
+                
+                // High-frequency beat-to-beat variability
+                const hf = (Math.random() - 0.5) * (amplitude * 0.8);
+                
+                fhr[i] += wander + hf;
             }
         }
 
-        addContractions(toco, config) { if (config.contractionsPer10Min === 0) return; const contractionDurationPoints = randInt(45, 90) * (this.app.CONFIG.POINTS_PER_MIN / 60); const numContractions = config.contractionsPer10Min * (this.app.CONFIG.MINS_TO_DISPLAY / 10); const spacing = toco.length / numContractions; for (let i = 0; i < numContractions; i++) { const peakPoint = Math.floor(i * spacing + rand(0, spacing/2)); const startPoint = Math.max(0, peakPoint - contractionDurationPoints / 2); for (let j = 0; j < contractionDurationPoints; j++) { const idx = Math.floor(startPoint + j); if (idx >= toco.length) break; const progress = j / contractionDurationPoints; const amplitude = Math.sin(progress * Math.PI) * rand(50, 80); toco[idx] = Math.min(100, toco[idx] + amplitude); } } }
-        addSinusoidalPattern(fhr, config) { const cyclesPerMin = rand(2, 5); const pointsPerMin = this.app.CONFIG.POINTS_PER_MIN; const frequency = (2 * Math.PI * cyclesPerMin) / pointsPerMin; const amplitude = rand(5, 15); for (let i = 0; i < fhr.length; i++) { fhr[i] = config.baseline + Math.sin(i * frequency) * amplitude; } }
+        // Returns a smooth bell shape instead of an abrupt half-sine
+        getBellCurve(progress) {
+            return (1 - Math.cos(progress * 2 * Math.PI)) / 2;
+        }
+
+        addContractions(toco, config) { 
+            if (config.contractionsPer10Min === 0) return; 
+            const pointsPerMin = this.app.CONFIG.POINTS_PER_MIN;
+            const contractionDurSecs = randInt(60, 90); 
+            const contractionDurationPoints = (contractionDurSecs / 60) * pointsPerMin; 
+            const numContractions = config.contractionsPer10Min * (this.app.CONFIG.MINS_TO_DISPLAY / 10); 
+            const spacing = toco.length / numContractions; 
+            
+            for (let i = 0; i < numContractions; i++) { 
+                const peakPoint = Math.floor(i * spacing + rand(0, spacing/2)); 
+                const startPoint = Math.max(0, peakPoint - contractionDurationPoints / 2); 
+                for (let j = 0; j < contractionDurationPoints; j++) { 
+                    const idx = Math.floor(startPoint + j); 
+                    if (idx >= toco.length) break; 
+                    const progress = j / contractionDurationPoints; 
+                    const amplitude = this.getBellCurve(progress) * rand(50, 80); 
+                    toco[idx] = Math.min(100, toco[idx] + amplitude); 
+                } 
+            } 
+        }
+
+        addSinusoidalPattern(fhr, config) { 
+            const cyclesPerMin = rand(2, 5); 
+            const pointsPerMin = this.app.CONFIG.POINTS_PER_MIN; 
+            const frequency = (2 * Math.PI * cyclesPerMin) / pointsPerMin; 
+            const amplitude = rand(5, 15); 
+            for (let i = 0; i < fhr.length; i++) { 
+                fhr[i] = config.baseline + Math.sin(i * frequency) * amplitude; 
+            } 
+        }
         
         addAccelerations(fhr, config, events) {
             if (!config.accelerations) return;
@@ -1191,7 +1153,7 @@
                     const idx = Math.floor(startIdx + j);
                     if (idx >= fhr.length) break;
                     const progress = j / duration;
-                    fhr[idx] += Math.sin(progress * Math.PI) * magnitude;
+                    fhr[idx] += this.getBellCurve(progress) * magnitude;
                 }
             }
         }
@@ -1205,7 +1167,7 @@
                 const duration = prolongedDecel.duration * (this.app.CONFIG.POINTS_PER_MIN / 60);
                 const startIdx = randInt(fhr.length * 0.2, fhr.length * 0.5);
                 const magnitude = prolongedDecel.magnitude;
-                this.applyDecelShape(fhr, startIdx, duration, magnitude);
+                this.applySmoothDecelShape(fhr, startIdx, duration, magnitude);
                 events.push({ type: 'decel', subType: 'prolonged', startIdx, duration, magnitude });
                 return; 
             }
@@ -1225,14 +1187,29 @@
             }
         }
         
-        findContractionPeaks(toco) { const peaks = []; let i = 0; while (i < toco.length) { if (toco[i] > 30) { let peakIdx = i; for (let j = i; j < toco.length && toco[j] > 10; j++) { if (toco[j] > toco[peakIdx]) peakIdx = j; i = j; } peaks.push(peakIdx); } i++; } return peaks; }
+        findContractionPeaks(toco) { 
+            const peaks = []; 
+            let i = 0; 
+            while (i < toco.length) { 
+                if (toco[i] > 30) { 
+                    let peakIdx = i; 
+                    for (let j = i; j < toco.length && toco[j] > 10; j++) { 
+                        if (toco[j] > toco[peakIdx]) peakIdx = j; 
+                        i = j; 
+                    } 
+                    peaks.push(peakIdx); 
+                } 
+                i++; 
+            } 
+            return peaks; 
+        }
         
-        applyDecelShape(fhr, start, duration, magnitude) { 
+        applySmoothDecelShape(fhr, start, duration, magnitude) { 
             for (let j = 0; j < duration; j++) { 
                 const idx = Math.floor(start + j); 
                 if (idx >= fhr.length || idx < 0) continue; 
                 const progress = j / duration; 
-                const drop = Math.sin(progress * Math.PI) * magnitude; 
+                const drop = this.getBellCurve(progress) * magnitude; 
                 fhr[idx] -= drop; 
             } 
         }
@@ -1241,7 +1218,7 @@
             const duration = template.duration * (this.app.CONFIG.POINTS_PER_MIN / 60);
             const startIdx = peakIdx - (duration / 2);
             const magnitude = template.magnitude;
-            this.applyDecelShape(fhr, startIdx, duration, magnitude);
+            this.applySmoothDecelShape(fhr, startIdx, duration, magnitude);
             events.push({ type: 'decel', subType: 'early', startIdx, duration, magnitude });
         }
 
@@ -1251,7 +1228,7 @@
             const nadirIdx = peakIdx + lag;
             const startIdx = nadirIdx - (duration / 2);
             const magnitude = template.magnitude;
-            this.applyDecelShape(fhr, startIdx, duration, magnitude);
+            this.applySmoothDecelShape(fhr, startIdx, duration, magnitude);
             events.push({ type: 'decel', subType: 'late', startIdx, duration, magnitude });
         }
         
@@ -1260,12 +1237,52 @@
             const offset = randInt(-15, 15) * (this.app.CONFIG.POINTS_PER_MIN / 60);
             const startIdx = peakIdx + offset;
             const magnitude = template.magnitude;
-            const hasShoulders = !isAtypical && Math.random() > 0.2; const shoulderMag = rand(10, 15); const shoulderDur = 15 * (this.app.CONFIG.POINTS_PER_MIN / 60); 
-            if(hasShoulders) { for(let i=0; i<shoulderDur; i++) { const idx = Math.floor(startIdx - shoulderDur + i); if (idx >= fhr.length || idx < 0) continue; fhr[idx] += shoulderMag * Math.sin((i/shoulderDur)*Math.PI); } }
-            const dropDuration = duration * 0.4; for(let i=0; i<dropDuration; i++) { const idx = Math.floor(startIdx+i); if (idx >= fhr.length || idx < 0) continue; fhr[idx] -= magnitude * (i/dropDuration); }
-            for(let i=0; i<duration*0.2; i++) { const idx = Math.floor(startIdx+dropDuration+i); if (idx >= fhr.length || idx < 0) continue; fhr[idx] -= magnitude; }
-            const recoveryDuration = duration * 0.4; const recoveryStart = startIdx+dropDuration+duration*0.2; for(let i=0; i<recoveryDuration; i++) { const idx = Math.floor(recoveryStart+i); if (idx >= fhr.length || idx < 0) continue; fhr[idx] -= magnitude * (1-(i/recoveryDuration)); }
-            if(hasShoulders) { const postShoulderStart = startIdx + duration; for(let i=0; i<shoulderDur; i++) { const idx = Math.floor(postShoulderStart + i); if (idx >= fhr.length || idx < 0) continue; fhr[idx] += shoulderMag * Math.sin((i/shoulderDur)*Math.PI); } }
+            
+            const hasShoulders = !isAtypical && Math.random() > 0.2; 
+            const shoulderMag = rand(10, 15); 
+            const shoulderDur = 15 * (this.app.CONFIG.POINTS_PER_MIN / 60); 
+            
+            // S-curve for abrupt but naturally smoothed drops (sharp vs late)
+            const ease = (t) => t * t * (3 - 2 * t); 
+
+            if(hasShoulders) { 
+                for(let i=0; i<shoulderDur; i++) { 
+                    const idx = Math.floor(startIdx - shoulderDur + i); 
+                    if (idx >= fhr.length || idx < 0) continue; 
+                    fhr[idx] += shoulderMag * this.getBellCurve(i/shoulderDur); 
+                } 
+            }
+
+            const dropDuration = duration * 0.3; 
+            for(let i=0; i<dropDuration; i++) { 
+                const idx = Math.floor(startIdx+i); 
+                if (idx >= fhr.length || idx < 0) continue; 
+                fhr[idx] -= magnitude * ease(i/dropDuration); 
+            }
+
+            const troughDuration = duration * 0.4;
+            for(let i=0; i<troughDuration; i++) { 
+                const idx = Math.floor(startIdx+dropDuration+i); 
+                if (idx >= fhr.length || idx < 0) continue; 
+                fhr[idx] -= magnitude; 
+            }
+
+            const recoveryDuration = duration * 0.3; 
+            const recoveryStart = startIdx+dropDuration+troughDuration; 
+            for(let i=0; i<recoveryDuration; i++) { 
+                const idx = Math.floor(recoveryStart+i); 
+                if (idx >= fhr.length || idx < 0) continue; 
+                fhr[idx] -= magnitude * (1 - ease(i/recoveryDuration)); 
+            }
+
+            if(hasShoulders) { 
+                const postShoulderStart = startIdx + duration; 
+                for(let i=0; i<shoulderDur; i++) { 
+                    const idx = Math.floor(postShoulderStart + i); 
+                    if (idx >= fhr.length || idx < 0) continue; 
+                    fhr[idx] += shoulderMag * this.getBellCurve(i/shoulderDur); 
+                } 
+            }
             events.push({ type: 'decel', subType: template.type, startIdx, duration, magnitude });
         }
     }
@@ -1352,13 +1369,16 @@
             }
 
             const baseline = caseData.baseline;
+            const varHalf = caseData.variability / 2;
             
-            // Calculate vertical position based on ground truth magnitude
-            const baselineY = this._fhrToY(baseline);
-            const peakOrNadirY = this._fhrToY(isAccel ? baseline + event.magnitude : baseline - event.magnitude);
+            // Add noise margin so the bounding box properly encapsulates the noisy physiological peaks
+            const peakMag = event.magnitude + varHalf;
             
-            const y1 = isAccel ? peakOrNadirY : baselineY;
-            const y2 = isAccel ? baselineY : peakOrNadirY;
+            const peakOrNadirY = this._fhrToY(isAccel ? baseline + peakMag : baseline - peakMag);
+            const baseSideY = this._fhrToY(isAccel ? baseline - varHalf : baseline + varHalf);
+            
+            const y1 = isAccel ? peakOrNadirY : baseSideY;
+            const y2 = isAccel ? baseSideY : peakOrNadirY;
             const color = isAccel ? getComputedStyle(document.documentElement).getPropertyValue('--anno-accel') : getComputedStyle(document.documentElement).getPropertyValue('--anno-decel');
             
             // Calculate horizontal position and duration details from ground truth
