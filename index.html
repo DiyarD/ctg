@@ -63,7 +63,22 @@
         }
         header h1 { font-size: 1.5em; font-weight: 700; margin: 0; }
         header p { font-size: 0.9em; opacity: 0.9; margin-top: 4px; }
+        .about-section {
+            text-align: left;
+            color: black;
+            font-size: 0.95em;
+        }
+        .about-section h3 {
+            margin-bottom: 10px;
+            color: white;
+        }
+        .about-section p {
+            margin-bottom: 5px;
+        }
 
+        .about-section a {
+            color: white !important;
+        }
         #main-content { 
             display: flex; 
             flex-direction: column;
@@ -244,6 +259,48 @@
         .score.perfect { color: var(--success-color); }
         .score.good { color: var(--warning-color); }
         .score.bad { color: var(--danger-color); }
+
+        /* === TUTOR PANEL === */
+        #tutor-panel { display: none; }
+        #tutor-panel.panel { padding: 0; overflow: hidden; }
+        .tutor-prog-track { height: 5px; background: var(--border-color); }
+        .tutor-prog-fill { height: 100%; background: linear-gradient(90deg, var(--accent-color), var(--success-color)); transition: width 0.5s ease; }
+        .tutor-body { padding: 16px; }
+        .tutor-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .tutor-badge { background: var(--accent-color); color: #fff; font-size: 0.75em; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+        .tutor-ttl { font-size: 1.05em; font-weight: 700; color: var(--accent-dark); margin: 0; }
+        .tutor-instr { font-size: 0.93em; color: var(--main-text); line-height: 1.65; margin-bottom: 12px; }
+        .tutor-pearl-btn { width: 100%; text-align: left; background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; padding: 7px 12px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 0.85em; font-weight: 500; transition: background 0.15s; font-family: 'Roboto', sans-serif; }
+        .tutor-pearl-btn:hover { background: #fef3c7; }
+        .tutor-pearl-body { display: none; background: #fffbeb; border: 1px solid #fcd34d; border-top: none; padding: 10px 14px; margin-bottom: 12px; font-size: 0.87em; color: #78350f; line-height: 1.65; border-radius: 0 0 6px 6px; }
+        .tutor-pearl-body.open { display: block; }
+        .tutor-input-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 12px 0 8px; }
+        #tutor-select-wrapper select { padding: 9px 32px 9px 10px; border-radius: 6px; border: 2px solid var(--border-color); font-size: 0.95em; min-width: 220px; -webkit-appearance: none; appearance: none; background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") right 0.5rem center/1.5em no-repeat white; transition: border-color 0.2s; font-family: 'Roboto', sans-serif; cursor: pointer; }
+        #tutor-select-wrapper select:focus { border-color: var(--accent-color); outline: none; }
+        .btn-reveal { background: #f0fdf4 !important; border: 1px solid var(--success-color) !important; color: #15803d !important; }
+        .btn-reveal:hover:not(:disabled) { background: #dcfce7 !important; }
+        .btn-reveal.done { background: var(--success-color) !important; color: white !important; }
+        .tutor-nav { display: flex; gap: 10px; margin-top: 14px; }
+        .tutor-nav button { flex: 1; padding: 10px; font-size: 0.95em; font-weight: 600; font-family: 'Roboto', sans-serif; }
+        #tutor-next-btn { background: var(--accent-color); color: white; border-color: var(--accent-dark); }
+        #tutor-next-btn:hover:not(:disabled) { background: var(--accent-dark); }
+        #tutor-next-btn:disabled, #tutor-prev-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        /* === CANVAS HINT BAR === */
+        .canvas-hint-bar { font-size: 0.8em; color: var(--light-text); padding: 5px 14px; display: flex; gap: 18px; flex-wrap: wrap; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.02); }
+        /* === SCROLL CHIP === */
+        .scroll-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 0.8em; color: var(--light-text); background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.18); padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+        /* === RESULTS TABLE 4-COL === */
+        .results-table td:last-child { font-size: 0.82em; color: var(--light-text); }
+
+        /* === TUTOR CLASSIFICATION TABLE === */
+        .tutor-table { width: 100%; border-collapse: collapse; margin: 10px 0 4px; font-size: 0.82em; }
+        .tutor-table th, .tutor-table td { border: 1px solid var(--border-color); padding: 5px 8px; text-align: left; vertical-align: middle; }
+        .tutor-table th { background: #f1f5f9; font-weight: 600; }
+        .tutor-table tr.t-reassuring td { background: #f0fdf4; }
+        .tutor-table tr.t-amber td { background: #fffbeb; }
+        .tutor-table tr.t-abnormal td { background: #fef2f2; }
+        .tutor-instr { font-size: 0.93em; color: var(--main-text); line-height: 1.75; margin-bottom: 10px; }
+        #tutor-table-container { margin-bottom: 10px; }
     </style>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-FYGDSGESS8"></script>
 <script>
@@ -262,11 +319,49 @@
         <header>
             <h1>Interactive CTG Interpretation Trainer</h1>
             <p>Based on NICE Clinical Guideline [CG190]</p>
+            <div class="about-section">
+                <h3>About this App</h3>
+                <p>
+                    This application is an experimental tool designed to help medical students practice their CTG interpretation skills. 
+                </p>
+                <p>
+                    <strong>Disclaimer:</strong> This is currently a developmental build. If you encounter any bugs, or find any information that you believe is clinically inaccurate, please get in touch.
+                </p>
+                <p>
+                    <strong>Contact:</strong> <a href="mailto:diyar.dlair.abdullah@gmail.com" style="color: var(--accent-color); text-decoration: underline; font-weight: 500;">diyar.dlair.abdullah@gmail.com</a>
+                </p>
+                <p>
+                    <strong>See also:</strong> <a href="https://diyard.github.io/partogram" target="_blank" style="color: var(--accent-color); text-decoration: underline; font-weight: 500;">Partogram Learning Tool</a>
+                </p>
+            </div>
         </header>
 
         <div id="main-content">
             
             <div id="interpretation-container">
+                <!-- GUIDED TUTOR PANEL -->
+                <div id="tutor-panel" class="panel">
+                    <div class="tutor-prog-track"><div class="tutor-prog-fill" id="tutor-prog-fill" style="width:0%"></div></div>
+                    <div class="tutor-body">
+                        <div class="tutor-header">
+                            <span class="tutor-badge" id="tutor-badge">1 / 6</span>
+                            <h3 class="tutor-ttl" id="tutor-ttl"></h3>
+                        </div>
+                        <p class="tutor-instr" id="tutor-instr"></p>
+                        <div id="tutor-table-container"></div>
+                        <button class="tutor-pearl-btn" id="tutor-pearl-btn">💡 Clinical Pearl ▼</button>
+                        <p class="tutor-pearl-body" id="tutor-pearl-body"></p>
+                        <div class="tutor-input-row">
+                            <button id="tutor-reveal-btn" class="tool-button btn-reveal">👁 Reveal on Trace</button>
+                            <div id="tutor-select-wrapper"></div>
+                        </div>
+                        <ul class="feedback-list" id="tutor-feedback"></ul>
+                        <div class="tutor-nav">
+                            <button id="tutor-prev-btn" class="tool-button" disabled>← Back</button>
+                            <button id="tutor-next-btn" class="tool-button" disabled>Next →</button>
+                        </div>
+                    </div>
+                </div>
                 <form id="interpretation-form">
                     <div class="panel controls-panel" style="align-items: flex-start;">
                          <div style="flex: 1 1 250px; font-size: 0.9em; align-self: center;">
@@ -360,6 +455,7 @@
                         <button id="zoom-reset-btn" class="tool-button" title="Reset Zoom">1x</button>
                         <button id="zoom-in-btn" class="tool-button" title="Zoom In">+</button>
                     </div>
+                    <div class="scroll-chip">⟵ scroll ⟶</div>
                     <div class="tool-button-group">
                         <button id="tool-hline-btn" class="tool-button" title="Draw Horizontal Line">H-Line</button>
                         <button id="tool-vline-btn" class="tool-button" title="Draw Vertical Line">V-Line</button>
@@ -379,6 +475,11 @@
                     <canvas id="ctg-canvas"></canvas>
                     <canvas id="annotation-canvas"></canvas>
                 </div>
+                <div class="canvas-hint-bar">
+                    <span>↔ Scroll the trace horizontally (use the scrollbar below, or swipe/two-finger scroll)</span>
+                    <span>📦 Click any highlighted box to inspect timing &amp; magnitude</span>
+                    <span>✏ Use toolbar tools to annotate manually</span>
+                </div>
             </div>
 
             <!-- MODIFICATION: This container is now empty as its contents were moved above the canvas -->
@@ -395,13 +496,14 @@
             <div id="modal-body">
                 <div id="score-display" class="score"></div>
                 <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th>Parameter (DR C BRAVADO)</th>
-                            <th>Your Answer</th>
-                            <th>Correct Answer</th>
-                        </tr>
-                    </thead>
+                        <thead>
+                            <tr>
+                                <th>Parameter (DR C BRAVADO)</th>
+                                <th>Your Answer</th>
+                                <th>Correct Answer</th>
+                                <th>Key Point</th>
+                            </tr>
+                        </thead>
                     <tbody id="results-tbody">
                     </tbody>
                 </table>
@@ -453,6 +555,54 @@
             this.assessmentSubmitted = false;
             this.areSystemAnnotationsVisible = false;
             this.activeProofAnnotation = null;
+            this.tutorRevealedCategories = new Set();
+            this.tutorAnswers = {};
+            this.tutorAnswered = [];
+            this.tutorStepIndex = 0;
+            this.TUTOR_STEPS = [
+                {
+                    field: 'contractions', icon: '🌊', title: 'Step 1 — Uterine Contractions',
+                    instruction: 'Look at the <strong>lower (tocogram) trace</strong> — the dome-shaped humps are uterine contractions.<br><br>📏 <strong>How to count:</strong> The numbered tick marks along the top (0, 1, 2, 3…) each represent <strong>exactly 1 minute</strong>. Pick any span of <strong>10 consecutive marks</strong> — that is one 10-minute window. Count how many contraction domes appear within it.<br><br>Click <em>"Reveal on Trace"</em> to mark the contraction peaks with vertical lines.',
+                    tableHtml: `<table class="tutor-table"><thead><tr><th>Count per 10 min</th><th>Classification</th></tr></thead><tbody><tr class="t-reassuring"><td>≤5 contractions</td><td>✅ Normal</td></tr><tr class="t-abnormal"><td>&gt;5 contractions</td><td>🔴 Tachysystole (abnormal)</td></tr></tbody></table>`,
+                    pearl: 'Each contraction compresses the intervillous space, briefly reducing fetal oxygen supply. Tachysystole shortens the recovery gap between contractions — even a healthy fetus will eventually decompensate if given insufficient recovery time. Oxytocin-induced tachysystole is a common and preventable cause of CTG deterioration.',
+                    revealCategories: ['contraction']
+                },
+                {
+                    field: 'baseline', icon: '📉', title: 'Step 2 — Baseline Fetal Heart Rate',
+                    instruction: 'The <strong>left Y-axis</strong> of the upper trace is labelled in bpm: 60, 80, 100, 120, 140, 160, 180, 200.<br><br>📏 <strong>How to measure:</strong> Mentally block out all the bumps upward (accelerations) and dips downward (decelerations). Focus on the <em>flat, horizontal stretches</em> of the trace. Estimate the average level of those flat parts over any 10-minute window, then read its bpm value off the left axis.<br><br>Click <em>"Reveal on Trace"</em> to see the calculated baseline (orange horizontal line).',
+                    tableHtml: `<table class="tutor-table"><thead><tr><th>Baseline Rate</th><th>Classification</th></tr></thead><tbody><tr class="t-reassuring"><td>110–160 bpm</td><td>✅ Reassuring</td></tr><tr class="t-amber"><td>100–109 bpm or 161–180 bpm</td><td>🟡 Non-reassuring</td></tr><tr class="t-abnormal"><td>&lt;100 bpm or &gt;180 bpm</td><td>🔴 Abnormal</td></tr></tbody></table>`,
+                    pearl: '<strong>"Rule of 3s":</strong> FHR &lt;80 bpm for &gt;3 minutes = severe hypoxia — prepare for immediate delivery. <strong>Tachycardia &gt;160 bpm</strong> may signal maternal pyrexia, chorioamnionitis, or early fetal hypoxia — always check the maternal pulse. A rising baseline (↑20 bpm over 1 hour) is as significant as an absolute abnormal value.',
+                    revealCategories: ['baseline']
+                },
+                {
+                    field: 'variability', icon: '〰️', title: 'Step 3 — Baseline Variability',
+                    instruction: 'Variability = the <strong>peak-to-trough bandwidth</strong> of the rapid irregular flickering visible in the FHR trace.<br><br>📏 <strong>How to measure:</strong> Choose a <em>calm 1-minute segment</em> (= one grid division wide) with no accelerations or decelerations. Within that segment, measure vertically from the <strong>lowest to the highest point</strong> of the fast oscillations — that distance in bpm is your variability.<br><br>⚠️ <strong>Important:</strong> Variability is the <em>fast beat-to-beat flickering</em>, NOT the slow drift of the baseline level over many minutes. If the trace looks like a flat line with tiny oscillations, that is reduced variability.<br><br>Click <em>"Reveal on Trace"</em> to see the modelled variability band (blue shaded box, minutes 10–20).',
+                    tableHtml: `<table class="tutor-table"><thead><tr><th>Bandwidth</th><th>Duration</th><th>Classification</th></tr></thead><tbody><tr class="t-reassuring"><td>5–25 bpm</td><td>Any duration</td><td>✅ Reassuring</td></tr><tr class="t-amber"><td>&lt;5 bpm</td><td>30–50 min</td><td>🟡 Non-reassuring</td></tr><tr class="t-amber"><td>&gt;25 bpm</td><td>15–25 min</td><td>🟡 Non-reassuring</td></tr><tr class="t-abnormal"><td>&lt;5 bpm</td><td>&gt;50 min</td><td>🔴 Abnormal</td></tr><tr class="t-abnormal"><td>&gt;25 bpm</td><td>&gt;25 min</td><td>🔴 Abnormal</td></tr><tr class="t-abnormal"><td>Sinusoidal pattern</td><td>≥30 min</td><td>🔴 Abnormal</td></tr></tbody></table>`,
+                    pearl: 'Variability is the <strong>single most important CTG feature</strong> — a direct proxy for fetal autonomic and neurological integrity. Reduced variability due to fetal hypoxia is almost never the first CTG change — it is typically preceded by decelerations and loss of accelerations. Benign causes to exclude first: fetal sleep (up to 50 min), opioids, extreme prematurity.',
+                    revealCategories: ['variability', 'baseline']
+                },
+                {
+                    field: 'accelerations', icon: '↑', title: 'Step 4 — Accelerations',
+                    instruction: 'An acceleration = an <strong>abrupt rise ≥15 bpm above baseline, lasting ≥15 seconds</strong>.<br><br>📏 <strong>How to identify on the trace:</strong> 15 seconds = <strong>¼ of one 1-minute grid square</strong>. A valid acceleration must be wide enough to span at least ¼ of a grid square, and must rise at least 15 bpm (read off the left axis) above the baseline.<br><br>Click <em>"Reveal on Trace"</em> to see identified accelerations (green boxes). You can click a box to inspect its exact duration and magnitude.',
+                    tableHtml: `<table class="tutor-table"><thead><tr><th>Finding</th><th>Classification</th></tr></thead><tbody><tr class="t-reassuring"><td>Accelerations present</td><td>✅ Reassuring</td></tr><tr class="t-amber"><td>Accelerations absent</td><td>🟡 Uncertain significance (not non-reassuring in isolation)</td></tr></tbody></table>`,
+                    pearl: 'Even a <strong>single unambiguous acceleration rules out fetal acidosis</strong>, regardless of any other CTG feature. This is because the fetus cannot mount an acceleration without an intact, oxygenated somatic nervous system. Absent accelerations alone on an otherwise normal CTG are clinically insignificant. However: absent accelerations + reduced variability + decelerations = very high-risk combination.',
+                    revealCategories: ['accel', 'baseline']
+                },
+                {
+                    field: 'decelerations', icon: '↓', title: 'Step 5 — Decelerations',
+                    instruction: 'A deceleration = a <strong>drop ≥15 bpm below baseline for ≥15 seconds</strong>. Identify the type by its <strong>timing relative to contraction peaks</strong> (vertical lines, visible after reveal) and its <strong>shape</strong>:<br><br>🔵 <strong>Early (benign):</strong> Gradual, U-shaped dip that <em>mirrors</em> the contraction — begins as the contraction starts, nadir at the contraction peak, returns to baseline as contraction ends. Caused by fetal head compression.<br><br>🔴 <strong>Late (serious):</strong> Gradual, U-shaped dip that begins <em>after</em> the contraction. The nadir occurs &gt;30 s after the contraction peak, and the FHR does not return to baseline until after the contraction ends. Indicates uteroplacental insufficiency.<br><br>🟠 <strong>Variable (common):</strong> <em>Abrupt</em> V-shaped drop (onset-to-nadir &lt;30 s), variable timing relative to contractions, variable depth. Often flanked by brief "shoulder" rises. Indicates cord compression. <div style="margin-top:8px;padding:8px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:5px;font-size:0.8em;line-height:1.7;"><strong>Typical variable</strong> (cord-compression response): abrupt V-shape, duration &lt;60 s, drop &lt;60 bpm, rapid return to baseline, shoulders present.<br><strong>⚠️ Concerning features</strong> (any one of): duration &gt;60 s · drop &gt;60 bpm or nadir &lt;60 bpm · no shoulders · slow return to baseline · W-shape (biphasic) · reduced variability <em>during</em> the dip · baseline rises after recovery.</div><br><br>Click <em>"Reveal on Trace"</em> to see decels (red boxes) and contraction peaks (vertical lines).',
+                    tableHtml: `<table class="tutor-table"><thead><tr><th>Deceleration type</th><th>NICE Classification</th></tr></thead><tbody><tr class="t-reassuring"><td>None / Early decelerations</td><td>✅ Reassuring</td></tr><tr class="t-reassuring"><td>Variable — <em>typical</em>, no concerns, &lt;90 min total</td><td>✅ Reassuring</td></tr><tr class="t-amber"><td>Variable — <em>with concerns</em>, &lt;50% contractions, &lt;30 min</td><td>🟡 Non-reassuring</td></tr><tr class="t-amber"><td>Variable — typical, no concerns, ≥90 min total</td><td>🟡 Non-reassuring</td></tr><tr class="t-abnormal"><td>Late decelerations (any duration or frequency)</td><td>🔴 Abnormal — always (NICE 2025)</td></tr><tr class="t-abnormal"><td>Variable — with concerns, &gt;50% contractions, &gt;30 min</td><td>🔴 Abnormal</td></tr><tr class="t-abnormal"><td>Prolonged deceleration &gt;3 min</td><td>🔴 Abnormal</td></tr></tbody></table>`,
+                    pearl: '"The later, longer, deeper — the higher the risk." <strong>Variable decels with shoulders</strong> = cord compression, fetus compensating. <strong>Variable decels losing their shoulders</strong>, with slow recovery, or W-shaped = fetal reserve diminishing. <strong>Late decels</strong> are ALWAYS a red (abnormal) feature per NICE 2025 regardless of duration or frequency — they reflect uteroplacental insufficiency, not cord compression.',
+                    revealCategories: ['decel', 'contraction', 'baseline']
+                },
+                {
+                    field: 'overall', icon: '🎯', title: 'Step 6 — Overall CTG Classification',
+                    instruction: '⚠️ <strong>Key distinction for students:</strong> Individual features are classified as <em>reassuring / non-reassuring / abnormal</em>. The overall CTG is given a different label: <em>Reassuring / Suspicious / Pathological</em>.<br><br>Count your feature findings from Steps 2–5, then apply the table below. Accelerations are a bonus reassuring sign — their absence alone does not count as a non-reassuring feature.',
+                    tableHtml: `<table class="tutor-table"><thead><tr><th>🟡 Non-reassuring features</th><th>🔴 Abnormal features</th><th>Overall CTG</th></tr></thead><tbody><tr class="t-reassuring"><td>0</td><td>0</td><td>✅ Reassuring</td></tr><tr class="t-amber"><td>1 only</td><td>0</td><td>🟡 Suspicious</td></tr><tr class="t-abnormal"><td>≥2</td><td>0</td><td>🔴 Pathological</td></tr><tr class="t-abnormal"><td>Any</td><td>≥1</td><td>🔴 Pathological</td></tr></tbody></table>`,
+                    pearl: '<strong>Pathological ≠ fetal distress</strong> — it means acidosis cannot be excluded. Standard response: ① Correct reversible causes (position change, IV fluids, stop oxytocin) ② Fetal blood sampling (FBS): pH &gt;7.25 → continue; 7.20–7.25 → repeat in 30 min; &lt;7.20 → deliver immediately. ③ If FBS unavailable or impractical → consider delivery.',
+                    revealCategories: ['baseline', 'variability', 'accel', 'decel', 'contraction']
+                }
+            ];
 
             this.CONFIG = {
                 MINS_TO_DISPLAY: 30,
@@ -470,8 +620,12 @@
             this.setMode(this.modeSelect.value);
             this.generateNewCase();
             setTimeout(() => {
-                this.redrawCurrentCase(true);
-            }, 100); // Delay to ensure canvas is ready
+                // Redraw for final layout — DO NOT regenerate (traceData already bound to annotations)
+                if (this.traceData) {
+                    this.draw(this.traceData);
+                    this.canvasContainer.scrollLeft = 0;
+                }
+            }, 100);
         }
 
         setupEventListeners() {
@@ -500,6 +654,16 @@
             this.annotationCanvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
             this.annotationCanvas.addEventListener('mouseleave', () => { this.isDrawing = false; });
             this.annotationCanvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+
+            document.getElementById('tutor-reveal-btn').addEventListener('click', () => this.handleTutorReveal());
+            document.getElementById('tutor-pearl-btn').addEventListener('click', () => {
+                const body = document.getElementById('tutor-pearl-body');
+                const btn = document.getElementById('tutor-pearl-btn');
+                body.classList.toggle('open');
+                btn.textContent = body.classList.contains('open') ? '💡 Clinical Pearl ▲' : '💡 Clinical Pearl ▼';
+            });
+            document.getElementById('tutor-prev-btn').addEventListener('click', () => this.handleTutorPrev());
+            document.getElementById('tutor-next-btn').addEventListener('click', () => this.handleTutorNext());
 
             this.form.querySelectorAll('select').forEach(select => {
                 select.addEventListener('change', (e) => {
@@ -580,10 +744,15 @@
             const pos = this.getCanvasCoordinates(e);
 
             let clickedAnnotation = null;
-            if (this.assessmentSubmitted || this.areSystemAnnotationsVisible) {
+            const canInspect = this.assessmentSubmitted || this.areSystemAnnotationsVisible ||
+                (this.currentMode === 'tutor' && this.tutorRevealedCategories.size > 0);
+            if (canInspect) {
                 for (let i = this.systemAnnotations.length - 1; i >= 0; i--) {
                     const anno = this.systemAnnotations[i];
                     if (anno.type === 'box' && anno.details) {
+                        // In tutor mode, only allow clicking on revealed annotations
+                        if (this.currentMode === 'tutor' && !this.assessmentSubmitted &&
+                            !(anno.category && this.tutorRevealedCategories.has(anno.category))) continue;
                         const startX = this.minsToX(anno.startTime);
                         const endX = this.minsToX(anno.endTime);
                         if (pos.x >= startX && pos.x <= endX && pos.y >= anno.y1 && pos.y <= anno.y2) {
@@ -599,9 +768,7 @@
             } else {
                 this.activeProofAnnotation = clickedAnnotation;
             }
-
-            const annotationsToDraw = (this.assessmentSubmitted || this.areSystemAnnotationsVisible) ? this.systemAnnotations : this.userAnnotations;
-            this.drawAnnotations(annotationsToDraw, this.actx);
+            this.redrawAnnotationCanvas();
         }
 
         xToMins(x) {
@@ -630,13 +797,46 @@
         clearAnnotations(context) {
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
         }
+
+        // Single compositing draw — always shows system (filtered by tutor state) + user annotations on top
+        redrawAnnotationCanvas() {
+            this.clearAnnotations(this.actx);
+            if (this.systemAnnotations.length > 0) {
+                let sysVisible;
+                if (this.currentMode === 'tutor' && !this.assessmentSubmitted) {
+                    sysVisible = this.systemAnnotations.filter(a => a.category && this.tutorRevealedCategories.has(a.category));
+                } else if (this.areSystemAnnotationsVisible || this.assessmentSubmitted) {
+                    sysVisible = this.systemAnnotations;
+                } else {
+                    sysVisible = [];
+                }
+                sysVisible.forEach(a => this.drawSingleAnnotation(a, this.actx));
+            }
+            this.userAnnotations.forEach(a => this.drawSingleAnnotation(a, this.actx));
+            if (this.activeProofAnnotation) this.drawProofForAnnotation(this.activeProofAnnotation, this.actx);
+        }
+
+        // Single compositing draw — always shows system (filtered by tutor state) + user annotations on top
+        redrawAnnotationCanvas() {
+            this.clearAnnotations(this.actx);
+            if (this.systemAnnotations.length > 0) {
+                let sysVisible;
+                if (this.currentMode === 'tutor' && !this.assessmentSubmitted) {
+                    sysVisible = this.systemAnnotations.filter(a => a.category && this.tutorRevealedCategories.has(a.category));
+                } else if (this.areSystemAnnotationsVisible || this.assessmentSubmitted) {
+                    sysVisible = this.systemAnnotations;
+                } else {
+                    sysVisible = [];
+                }
+                sysVisible.forEach(a => this.drawSingleAnnotation(a, this.actx));
+            }
+            this.userAnnotations.forEach(a => this.drawSingleAnnotation(a, this.actx));
+            if (this.activeProofAnnotation) this.drawProofForAnnotation(this.activeProofAnnotation, this.actx);
+        }
         
         drawAnnotations(annotations, context) {
-            this.clearAnnotations(context);
-            annotations.forEach(anno => this.drawSingleAnnotation(anno, context));
-            if (this.activeProofAnnotation) {
-                this.drawProofForAnnotation(this.activeProofAnnotation, context);
-            }
+            // Delegate to compositing draw — both layers (system+user) always rendered correctly
+            this.redrawAnnotationCanvas();
         }
         
         drawSingleAnnotation(anno, context) {
@@ -784,12 +984,146 @@
             this.currentMode = mode;
             this.form.reset();
             document.querySelectorAll('.feedback-list').forEach(el => el.innerHTML = '');
-            this.submitBtn.style.display = 'block'; // Always visible now
-            if (this.currentMode === 'tutor') {
+            const tutorPanel = document.getElementById('tutor-panel');
+            if (mode === 'tutor') {
+                tutorPanel.style.display = 'block';
+                this.form.style.display = 'none';
                 this.submitBtn.style.display = 'none';
+                this.viewAnnotationsBtn.style.display = 'none';
+                if (this.currentCase) this.initTutorMode();
+            } else {
+                tutorPanel.style.display = 'none';
+                this.form.style.display = '';
+                this.submitBtn.style.display = 'block';
+                this.viewAnnotationsBtn.style.display = '';
             }
         }
         
+        initTutorMode() {
+            this.tutorStepIndex = 0;
+            this.tutorRevealedCategories = new Set();
+            this.tutorAnswers = {};
+            this.tutorAnswered = new Array(this.TUTOR_STEPS.length).fill(false);
+            if (this.traceData && this.systemAnnotations.length === 0) {
+                this.systemAnnotations = this.annotationEngine.generate(this.currentCase, this.traceData);
+            }
+            this.renderTutorStep();
+            this.redrawAnnotationCanvas();
+        }
+
+        renderTutorStep() {
+            const step = this.TUTOR_STEPS[this.tutorStepIndex];
+            const total = this.TUTOR_STEPS.length;
+            document.getElementById('tutor-prog-fill').style.width = `${(this.tutorStepIndex / total) * 100}%`;
+            document.getElementById('tutor-badge').textContent = `${this.tutorStepIndex + 1} / ${total}`;
+            document.getElementById('tutor-ttl').textContent = `${step.icon} ${step.title}`;
+            document.getElementById('tutor-instr').innerHTML = step.instruction;
+            document.getElementById('tutor-table-container').innerHTML = step.tableHtml || '';
+            const pearlBody = document.getElementById('tutor-pearl-body');
+            pearlBody.innerHTML = step.pearl;
+            pearlBody.classList.remove('open');
+            document.getElementById('tutor-pearl-btn').textContent = '💡 Clinical Pearl ▼';
+            const alreadyRevealed = step.revealCategories.every(c => this.tutorRevealedCategories.has(c));
+            const revealBtn = document.getElementById('tutor-reveal-btn');
+            revealBtn.textContent = alreadyRevealed ? '✓ Revealed' : '👁 Reveal on Trace';
+            revealBtn.classList.toggle('done', alreadyRevealed);
+            // Clone the relevant select into the tutor input row
+            const wrapper = document.getElementById('tutor-select-wrapper');
+            const orig = document.getElementById(step.field);
+            const clone = orig.cloneNode(true);
+            clone.id = 'tutor-active-select';
+            clone.removeAttribute('name');
+            if (this.tutorAnswers[step.field]) clone.value = this.tutorAnswers[step.field];
+            wrapper.innerHTML = '';
+            wrapper.appendChild(clone);
+            clone.addEventListener('change', e => this.handleTutorAnswer(step.field, e.target.value));
+            // Feedback
+            document.getElementById('tutor-feedback').innerHTML = '';
+            if (this.tutorAnswers[step.field]) this.showTutorFeedback(step.field, this.tutorAnswers[step.field]);
+            // Nav
+            const isLast = this.tutorStepIndex === total - 1;
+            document.getElementById('tutor-prev-btn').disabled = this.tutorStepIndex === 0;
+            document.getElementById('tutor-next-btn').textContent = isLast ? '🎯 See Results' : 'Next →';
+            document.getElementById('tutor-next-btn').disabled = !this.tutorAnswered[this.tutorStepIndex];
+        }
+
+        handleTutorReveal() {
+            const step = this.TUTOR_STEPS[this.tutorStepIndex];
+            step.revealCategories.forEach(c => this.tutorRevealedCategories.add(c));
+            if (this.systemAnnotations.length === 0) {
+                this.systemAnnotations = this.annotationEngine.generate(this.currentCase, this.traceData);
+            }
+            this.redrawAnnotationCanvas();
+            const btn = document.getElementById('tutor-reveal-btn');
+            btn.textContent = '✓ Revealed'; btn.classList.add('done');
+        }
+
+        handleTutorAnswer(field, value) {
+            this.tutorAnswers[field] = value;
+            const hidden = document.getElementById(field);
+            if (hidden) hidden.value = value;
+            this.tutorAnswered[this.tutorStepIndex] = true;
+            this.showTutorFeedback(field, value);
+            const isLast = this.tutorStepIndex === this.TUTOR_STEPS.length - 1;
+            const nextBtn = document.getElementById('tutor-next-btn');
+            nextBtn.disabled = false;
+            nextBtn.textContent = isLast ? '🎯 See Results' : 'Next →';
+        }
+
+        showTutorFeedback(field, value) {
+            const correct = this.correctAnswers[field];
+            const isCorrect = value === correct;
+            const el = document.getElementById('tutor-feedback');
+            el.innerHTML = '';
+            const li = document.createElement('li');
+            li.className = isCorrect ? 'fb-correct' : 'fb-incorrect';
+            li.textContent = isCorrect
+                ? `Correct! ${this.getTutorExplanation(field, value)}`
+                : `The answer is: ${this.getFriendlyText(field, correct)}. ${this.getTutorExplanation(field, correct)}`;
+            el.appendChild(li);
+            if (!isCorrect) {
+                // Auto-reveal relevant annotations so learner can see why
+                const step = this.TUTOR_STEPS[this.tutorStepIndex];
+                step.revealCategories.forEach(c => this.tutorRevealedCategories.add(c));
+                if (this.systemAnnotations.length === 0) {
+                    this.systemAnnotations = this.annotationEngine.generate(this.currentCase, this.traceData);
+                }
+                this.redrawAnnotationCanvas();
+                const btn = document.getElementById('tutor-reveal-btn');
+                if (btn) { btn.textContent = '✓ Revealed'; btn.classList.add('done'); }
+            }
+        }
+
+        handleTutorNext() {
+            if (this.tutorStepIndex === this.TUTOR_STEPS.length - 1) {
+                document.getElementById('tutor-prog-fill').style.width = '100%';
+                this.handleSubmit();
+                return;
+            }
+            this.tutorStepIndex++;
+            this.renderTutorStep();
+            this.redrawAnnotationCanvas();
+        }
+
+        handleTutorPrev() {
+            if (this.tutorStepIndex === 0) return;
+            this.tutorStepIndex--;
+            this.renderTutorStep();
+            this.redrawAnnotationCanvas();
+        }
+
+        getTutorExplanation(field, value) {
+            const map = {
+                contractions: { '≤5': 'Normal uterine activity — ≤5 contractions per 10 min.', '>5': 'Tachysystole — shortens fetal recovery window between contractions.' },
+                baseline: { 'reassuring': '110–160 bpm is within the normal range.', 'non-reassuring': '100–109 or 161–180 bpm is a borderline rate requiring close monitoring.', 'abnormal': '<100 or >180 bpm is significantly abnormal and needs urgent senior review.' },
+                variability: { 'reassuring': '5–25 bpm bandwidth indicates a healthy, responsive autonomic system.', 'non-reassuring': 'Borderline variability — watch for any additional non-reassuring features.', 'abnormal': 'Significantly abnormal variability is the most ominous CTG finding.', 'sinusoidal': 'Sinusoidal pattern requires urgent investigation for fetal anaemia (e.g. anti-D rhesus disease).' },
+                accelerations: { 'present': 'Accelerations essentially rule out fetal acidosis regardless of other features.', 'absent': 'Absent accelerations alone are of uncertain significance on an otherwise normal CTG.' },
+                decelerations: { 'none': 'No decelerations — reassuring.', 'early': 'U-shaped dip that mirrors the contraction — starts and ends with it. Caused by vagal response to head compression. Benign.', 'variable_typical': 'Typical variable: abrupt V-shaped drop, <60 s duration, clear shoulder rises before and after. Indicates cord compression — fetus compensating well.', 'variable_atypical': 'Concerning variable: one or more of — duration >60 s, depth >60 bpm, absent shoulders, slow return, W-shape, or reduced variability within the dip. Fetal reserve is diminishing.', 'late': 'Gradual U-shaped dip whose nadir is clearly after the contraction peak, returning to baseline after the contraction ends. Indicates uteroplacental insufficiency — always a RED (abnormal) feature per NICE 2025 regardless of duration.', 'prolonged': 'Drop lasting >3 minutes — chemoreceptor response indicates significant hypoxaemia. Requires immediate senior review and preparation for delivery.' },
+                overall: { 'reassuring': 'All features within normal limits — continue routine monitoring.', 'suspicious': '1 non-reassuring feature — increase vigilance and correct reversible causes.', 'pathological': 'Acidosis cannot be excluded — urgent review, consider fetal blood sampling.' }
+            };
+            return map[field]?.[value] || '';
+        }
+
         generateNewCase() {
             this.form.reset();
             document.querySelectorAll('.feedback-list').forEach(el => el.innerHTML = '');
@@ -802,21 +1136,28 @@
                 this.viewAnnotationsBtn.classList.remove('selected');
             }
             this.setActiveTool(null);
+            this.tutorRevealedCategories = new Set();
+            this.tutorAnswers = {};
+            this.tutorAnswered = new Array((this.TUTOR_STEPS || []).length).fill(false);
+            this.tutorStepIndex = 0;
             this.currentCase = this.caseGenerator.createRandomCase();
             this.correctAnswers = this.interpretationEngine.interpret(this.currentCase);
             this.displayRiskFactors();
             this.currentZoomLevel = 1;
+            this.traceData = null; // Force single clean generation for this case
             this.redrawCurrentCase(true);
             this.updateZoomButtons();
+            if (this.currentMode === 'tutor') this.initTutorMode();
         }
 
         redrawCurrentCase(resetScroll = false) {
             if (!this.currentCase) return;
-            if (!this.traceData || resetScroll) {
+            // Only generate if absent — call this.traceData = null before this to force regen
+            if (!this.traceData) {
                 this.traceData = this.traceGenerator.generate(this.currentCase);
             }
             this.draw(this.traceData);
-            if(resetScroll) this.canvasContainer.scrollLeft = 0;
+            if (resetScroll) this.canvasContainer.scrollLeft = 0;
         }
 
         displayRiskFactors() {
@@ -872,7 +1213,7 @@
                 const row = document.createElement('tr');
                 row.className = isCorrect ? 'fb-correct' : 'fb-incorrect';
                 // MODIFICATION: Use the fieldLabels map instead of querying the DOM for a label
-                row.innerHTML = `<td>${fieldLabels[field]}</td><td>${this.getFriendlyText(field, userAnswers[field]) || 'Not answered'}</td><td>${this.getFriendlyText(field, this.correctAnswers[field])}</td>`;
+                row.innerHTML = `<td>${fieldLabels[field]}</td><td>${this.getFriendlyText(field, userAnswers[field]) || 'Not answered'}</td><td>${this.getFriendlyText(field, this.correctAnswers[field])}</td><td>${this.getTutorExplanation(field, this.correctAnswers[field])}</td>`;
                 resultsTbody.appendChild(row);
             });
             const scoreDisplay = document.getElementById('score-display');
@@ -933,8 +1274,7 @@
             this.drawGrid(totalCanvasWidth);
             this.drawTrace(traceData.fhr, this.CONFIG.FHR_MIN, this.CONFIG.FHR_MAX, 0, totalCanvasWidth, fhrHeight);
             this.drawTrace(traceData.toco, this.CONFIG.TOCO_MIN, this.CONFIG.TOCO_MAX, fhrHeight, totalCanvasWidth, tocoHeight);
-            const annotationsToDraw = (this.assessmentSubmitted || this.areSystemAnnotationsVisible) ? this.systemAnnotations : this.userAnnotations;
-            this.drawAnnotations(annotationsToDraw, this.actx);
+            this.redrawAnnotationCanvas();
         }
 
         drawGrid(width) {
@@ -968,7 +1308,7 @@
                 config.decelerations = Array(randInt(1, 5)).fill(0).map(()=> ({ 
                     type: 'early', 
                     duration: randInt(20, 50),
-                    magnitude: rand(18, 45)
+                    magnitude: rand(15, 35) // Early decels are shallow; NICE describes them as mirror of contraction
                 })); 
             }
             else { 
@@ -992,8 +1332,10 @@
                     break;
                 case 'decelerations':
                     config.decelerations.push(pick([
-                        { type: 'late', inOver50Percent: true, duration: randInt(15, 29), magnitude: rand(25, 50) },
-                        { type: 'variable_atypical', inOver50Percent: false, duration: randInt(31, 50), magnitude: rand(30, 60) }
+                        // Late decels must be ≥45s — shorter than this and a bell curve looks like a V (variable)
+                        { type: 'late', inOver50Percent: true, duration: randInt(45, 70), magnitude: rand(20, 40) },
+                        // Atypical variable: >60s makes the "prolonged, slow-recovery" concern clinically visible
+                        { type: 'variable_atypical', inOver50Percent: false, duration: randInt(60, 90), magnitude: rand(30, 60) }
                     ]));
                     break;
             }
@@ -1017,8 +1359,8 @@
                 case 'decelerations':
                     const decelType = pick(['late', 'variable_atypical', 'prolonged']);
                     if (decelType === 'prolonged') { config.decelerations = [{ type: 'prolonged', duration: rand(181, 300), magnitude: rand(40, 80) }]; }
-                    else if (decelType === 'late') { config.decelerations.push({ type: 'late', inOver50Percent: true, duration: randInt(31, 50), magnitude: rand(30, 60) }); }
-                    else { config.decelerations.push({ type: 'variable_atypical', inOver50Percent: true, duration: randInt(31, 50), magnitude: rand(35, 70) }); }
+                    else if (decelType === 'late') { config.decelerations.push({ type: 'late', inOver50Percent: true, duration: randInt(60, 100), magnitude: rand(25, 50) }); }
+                    else { config.decelerations.push({ type: 'variable_atypical', inOver50Percent: true, duration: randInt(65, 100), magnitude: rand(35, 70) }); }
                     break;
                 case 'combo':
                     this.buildSuspicious(config);
@@ -1046,15 +1388,21 @@
                 this.addSinusoidalPattern(fhrData, config);
             } 
             else {
-                // Add pure mathematical physiological shapes without lag
-                this.addAccelerations(fhrData, config, intendedEvents);
+                // Decelerations first — their windows must exist before placing accels
                 this.addDecelerations(fhrData, config, tocoData, intendedEvents);
+                // Accelerations placed after, avoiding decel windows entirely
+                this.addAccelerations(fhrData, config, intendedEvents);
                 
-                // Merge cleanly before noise so bounding boxes act correctly
+                // Merge overlapping same-type events
                 intendedEvents = this.mergeEvents(intendedEvents);
 
                 // Zero-mean variability added ON TOP. Doesn't shift event timing.
                 this.applyRealisticVariability(fhrData, config);
+            }
+
+            // Clamp FHR to valid display range — prevents off-screen spikes/artifacts
+            for (let i = 0; i < fhrData.length; i++) {
+                fhrData[i] = Math.max(this.app.CONFIG.FHR_MIN + 1, Math.min(this.app.CONFIG.FHR_MAX - 1, fhrData[i]));
             }
 
             // Add realistic noise to the Toco trace as well
@@ -1152,11 +1500,28 @@
         addAccelerations(fhr, config, events) {
             if (!config.accelerations) return;
             const numAccels = randInt(1, 6) * (this.app.CONFIG.MINS_TO_DISPLAY / 10);
+
+            // Build exclusion zones from already-placed decel events + 15s buffer each side
+            const buf = Math.round(this.app.CONFIG.POINTS_PER_MIN * 0.25);
+            const decelZones = events
+                .filter(e => e.type === 'decel')
+                .map(e => ({ start: e.startIdx - buf, end: e.startIdx + e.duration + buf }));
+            const overlapsDecel = (s, dur) => {
+                const end = s + dur;
+                return decelZones.some(z => s < z.end && end > z.start);
+            };
             
             for (let i = 0; i < numAccels; i++) {
-                const duration = randInt(16, 40) * (this.app.CONFIG.POINTS_PER_MIN / 60);
-                const startIdx = randInt(0, fhr.length - duration);
-                const magnitude = rand(16, 35);
+                // 15-35s duration — satisfies NICE >15s criterion
+                const duration = randInt(15, 35) * (this.app.CONFIG.POINTS_PER_MIN / 60);
+                let startIdx, attempts = 0;
+                do {
+                    startIdx = randInt(0, fhr.length - duration - 1);
+                    attempts++;
+                } while (overlapsDecel(startIdx, duration) && attempts < 20);
+                if (attempts >= 20) continue; // skip if no clear space found
+
+                const magnitude = rand(15, 30); // >15 bpm per NICE
                 events.push({ type: 'accel', startIdx, duration, magnitude });
                 
                 for (let j = 0; j < duration; j++) {
@@ -1234,7 +1599,9 @@
 
         applyLateDecel(fhr, peakIdx, template, events) {
             const duration = template.duration * (this.app.CONFIG.POINTS_PER_MIN / 60);
-            const lag = 15 * (this.app.CONFIG.POINTS_PER_MIN / 60);
+            // NICE: nadir clearly after contraction peak. 30-50s ensures visually unambiguous post-peak timing
+            const lagSecs = randInt(30, 50);
+            const lag = lagSecs * (this.app.CONFIG.POINTS_PER_MIN / 60);
             const nadirIdx = peakIdx + lag;
             const startIdx = nadirIdx - (duration / 2);
             const magnitude = template.magnitude;
@@ -1318,7 +1685,7 @@
                     if (worstDecel.inOver50Percent) abnormalCount++; else nonReassuringCount++;
                     break;
                 case 'late':
-                    if (worstDecel.duration > 30) abnormalCount++; else nonReassuringCount++;
+                    abnormalCount++; // Always RED/abnormal per NICE 2025 amendment — regardless of duration
                     break;
                 case 'prolonged':
                     if (worstDecel.duration > 180) abnormalCount++; else nonReassuringCount++;
@@ -1340,28 +1707,48 @@
             
             // Draw baseline
             const baselineY = this._fhrToY(caseData.baseline);
-            annotations.push({ type: 'hline', y: baselineY, color: getComputedStyle(document.documentElement).getPropertyValue('--anno-baseline'), label: `Baseline: ${caseData.baseline} bpm`, isSystem: true });
+            annotations.push({ type: 'hline', y: baselineY, color: getComputedStyle(document.documentElement).getPropertyValue('--anno-baseline'), label: `Baseline: ${caseData.baseline} bpm`, isSystem: true, category: 'baseline' });
 
-            // Draw variability band
+            // Draw variability band — exactly 1 minute wide (clinical measurement window)
             if (!caseData.isSinusoidal) {
                 const varHalf = caseData.variability / 2;
                 const varTopY = this._fhrToY(caseData.baseline + varHalf);
                 const varBottomY = this._fhrToY(caseData.baseline - varHalf);
+                // Find the first quiet 1-minute window free of events (with 0.5 min buffer either side)
+                let varStart = 4;
+                for (let t = 3; t <= 24; t++) {
+                    const hasEvent = (traceData.events || []).some(e => {
+                        const eS = this._idxToMins(e.startIdx) - 0.5;
+                        const eE = this._idxToMins(e.startIdx + e.duration) + 0.5;
+                        return eS < t + 1 && eE > t;
+                    });
+                    if (!hasEvent) { varStart = t; break; }
+                }
                 annotations.push({ 
                     type: 'box', 
-                    startTime: 10, endTime: 20, 
+                    startTime: varStart, endTime: varStart + 1, 
                     y1: varTopY, y2: varBottomY, 
                     color: 'rgba(59, 130, 246, 0.8)', 
-                    label: `Variability Band: ~${caseData.variability.toFixed(0)} bpm`, 
-                    isSystem: true,
+                    label: `Variability ~${caseData.variability.toFixed(0)} bpm (1-min window)`, 
+                    isSystem: true, category: 'variability',
                     details: { magnitude: caseData.variability }
                 });
             }
+
+            // Vertical lines at each contraction peak — shows temporal relationship to decels
+            this._findContractionPeakMins(traceData.toco).forEach(peakMins => {
+                annotations.push({
+                    type: 'vline',
+                    time: peakMins,
+                    color: 'rgba(160, 90, 10, 0.4)',
+                    isSystem: true, category: 'contraction'
+                });
+            });
             
-            // Create annotations from the ground-truth event data
+            // Create annotations from the ground-truth event data, passing actual fhr trace for tight bounding boxes
             if (traceData.events) {
                 traceData.events.forEach(event => {
-                    const annotation = this._createAnnotationFromEvent(event, caseData);
+                    const annotation = this._createAnnotationFromEvent(event, caseData, traceData.fhr);
                     if (annotation) annotations.push(annotation);
                 });
             }
@@ -1369,47 +1756,68 @@
             return annotations;
         }
 
-        _createAnnotationFromEvent(event, caseData) {
+        _createAnnotationFromEvent(event, caseData, fhrData) {
             const isAccel = event.type === 'accel';
-            let label;
-            if (isAccel) {
-                label = 'Accel';
-            } else {
-                label = event.subType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            }
+            const label = isAccel
+                ? 'Accel'
+                : event.subType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
             const baseline = caseData.baseline;
-            const varHalf = caseData.variability / 2;
-            
-            // Add noise margin so the bounding box properly encapsulates the noisy physiological peaks
-            const peakMag = event.magnitude + varHalf;
-            
-            const peakOrNadirY = this._fhrToY(isAccel ? baseline + peakMag : baseline - peakMag);
-            const baseSideY = this._fhrToY(isAccel ? baseline - varHalf : baseline + varHalf);
-            
-            const y1 = isAccel ? peakOrNadirY : baseSideY;
-            const y2 = isAccel ? baseSideY : peakOrNadirY;
-            const color = isAccel ? getComputedStyle(document.documentElement).getPropertyValue('--anno-accel') : getComputedStyle(document.documentElement).getPropertyValue('--anno-decel');
-            
-            // Calculate horizontal position and duration details from ground truth
-            const startTime = this._idxToMins(event.startIdx);
-            const endTime = this._idxToMins(event.startIdx + event.duration);
-            const pointsPerSec = this.app.CONFIG.POINTS_PER_MIN / 60;
-            const durationSeconds = event.duration / pointsPerSec;
+            const MARGIN = 3; // bpm — small visual margin around the actual trace extreme
+
+            // Scan the actual rendered trace to find the real peak (accel) or nadir (decel)
+            // This tightly fits the box to what's actually drawn rather than a theoretical magnitude
+            let actualExtreme = baseline;
+            if (fhrData) {
+                const s = Math.max(0, Math.floor(event.startIdx));
+                const e = Math.min(fhrData.length - 1, Math.floor(event.startIdx + event.duration));
+                for (let i = s; i <= e; i++) {
+                    actualExtreme = isAccel
+                        ? Math.max(actualExtreme, fhrData[i])
+                        : Math.min(actualExtreme, fhrData[i]);
+                }
+            } else {
+                actualExtreme = isAccel ? baseline + event.magnitude : baseline - event.magnitude;
+            }
+
+            // Peak side: actual extreme ± margin. Base side: just past the baseline.
+            const peakOrNadirY = this._fhrToY(isAccel ? actualExtreme + MARGIN : actualExtreme - MARGIN);
+            const baseSideY   = this._fhrToY(isAccel ? baseline - MARGIN       : baseline + MARGIN);
+
+            const y1    = isAccel ? peakOrNadirY : baseSideY;
+            const y2    = isAccel ? baseSideY    : peakOrNadirY;
+            const color = isAccel
+                ? getComputedStyle(document.documentElement).getPropertyValue('--anno-accel')
+                : getComputedStyle(document.documentElement).getPropertyValue('--anno-decel');
+
+            const startTime      = this._idxToMins(event.startIdx);
+            const endTime        = this._idxToMins(event.startIdx + event.duration);
+            const durationSeconds = event.duration / (this.app.CONFIG.POINTS_PER_MIN / 60);
 
             return {
-                type: 'box',
-                startTime: startTime,
-                endTime: endTime,
-                y1: y1,
-                y2: y2,
-                color: color,
-                label: label,
-                isSystem: true,
+                type: 'box', startTime, endTime, y1, y2, color, label,
+                isSystem: true, category: isAccel ? 'accel' : 'decel',
                 details: { magnitude: event.magnitude, duration: durationSeconds }
             };
         }
         
+        _findContractionPeakMins(toco) {
+            const ppm = this.app.CONFIG.POINTS_PER_MIN;
+            const peaks = [];
+            let i = 0;
+            while (i < toco.length) {
+                if (toco[i] > 25) {
+                    let peakIdx = i, j = i;
+                    while (j < toco.length && toco[j] > 10) {
+                        if (toco[j] > toco[peakIdx]) peakIdx = j;
+                        j++;
+                    }
+                    peaks.push(peakIdx / ppm);
+                    i = j;
+                } else { i++; }
+            }
+            return peaks;
+        }
         _idxToMins(idx) { return idx / this.app.CONFIG.POINTS_PER_MIN; }
         _fhrToY(fhr) { const fhrHeight = this.app.CANVAS_HEIGHT * (2 / 3); return fhrHeight - ((fhr - this.app.CONFIG.FHR_MIN) / (this.app.CONFIG.FHR_MAX - this.app.CONFIG.FHR_MIN)) * fhrHeight; }
         _tocoToY(toco) { const fhrHeight = this.app.CANVAS_HEIGHT * (2 / 3); const tocoHeight = this.app.CANVAS_HEIGHT * (1 / 3); return fhrHeight + (tocoHeight - (((toco - this.app.CONFIG.TOCO_MIN) / (this.app.CONFIG.TOCO_MAX - this.app.CONFIG.TOCO_MIN)) * tocoHeight)); }
